@@ -7,8 +7,12 @@ pub fn setup(mut commands: Commands) {
 }
 
 pub fn update_camera(
-    player: Query<&Transform, (With<Player>, Without<Camera2d>)>,
-    mut camera: Query<&mut Transform, With<Camera2d>>,
+    player_query: Query<&Transform, (With<Player>, Without<Camera2d>)>,
+    mut camera_query: Query<&mut Transform, With<Camera2d>>,
 ) {
-    camera.single_mut().translation = player.single().translation.clone();
+    let camera_res = camera_query.get_single_mut();
+    let player_res = player_query.get_single();
+    if camera_res.is_ok() && player_res.is_ok() {
+        camera_res.unwrap().translation = player_res.unwrap().translation.clone();
+    }
 }

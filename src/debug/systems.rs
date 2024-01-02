@@ -38,7 +38,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     font_size: 40.,
                     color: Color::WHITE,
                     ..default()
-                }
+                },
             ),
             TextSection::from_style(TextStyle {
                 font: font.clone(),
@@ -62,15 +62,18 @@ pub fn debug_text(
     mut debug_texts: Query<(&mut Text, &Name)>,
 ) {
     for (mut text, name) in debug_texts.iter_mut() {
-        let pos = sprite_position.single();
-        match name.0.as_str() {
-            "X" => {
-                text.sections[1].value = pos.translation.x.to_string();
+        let pos_res = sprite_position.get_single();
+        if pos_res.is_ok() {
+            let pos = pos_res.unwrap();
+            match name.0.as_str() {
+                "X" => {
+                    text.sections[1].value = pos.translation.x.to_string();
+                }
+                "Y" => {
+                    text.sections[1].value = pos.translation.y.to_string();
+                }
+                _ => {}
             }
-            "Y" => {
-                text.sections[1].value = pos.translation.y.to_string();
-            }
-            _ => {}
         }
     }
 }
