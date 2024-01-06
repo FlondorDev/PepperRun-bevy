@@ -26,7 +26,7 @@ fn add_velocity_y(translation: &mut Vec3, velocity: &Vec2, time: &Res<Time>) {
     translation.y += velocity.y * time.delta_seconds();
 }
 
-fn collide_x(
+fn x(
     org_a_pos: Vec3,
     a_pos: Vec3,
     a_size: Vec2,
@@ -59,7 +59,7 @@ fn collide_x(
     }
 }
 
-fn collide_y(
+fn y(
     org_a_pos: Vec3,
     a_pos: Vec3,
     a_size: Vec2,
@@ -92,7 +92,7 @@ fn collide_y(
     }
 }
 
-pub fn collide(
+pub fn collide_y(
     a_pos: &mut Transform,
     a_image: &Handle<Image>,
     a_col: &Collider,
@@ -101,7 +101,28 @@ pub fn collide(
     b_col: &Collider,
     assets: &Res<Assets<Image>>,
     time: &Res<Time>,
-) -> (Option<(Collision, f32)>, Option<(Collision, f32)>) {
+) -> Option<(Collision, f32)> {
+    let a_size = assets.get(a_image).unwrap().size().as_vec2() * a_pos.scale.truncate();
+    let b_size = assets.get(b_image).unwrap().size().as_vec2() * b_pos.scale.truncate();
+
+    let mut new_a_pos_y = a_pos.translation.clone();
+    let mut new_b_pos_y = b_pos.translation.clone();
+    add_velocity_y(&mut new_a_pos_y, &a_col.velocity, &time);
+    add_velocity_y(&mut new_b_pos_y, &b_col.velocity, &time);
+
+    y(a_pos.translation, new_a_pos_y, a_size, new_b_pos_y, b_size)
+}
+
+pub fn collide_x(
+    a_pos: &mut Transform,
+    a_image: &Handle<Image>,
+    a_col: &Collider,
+    b_pos: &mut Transform,
+    b_image: &Handle<Image>,
+    b_col: &Collider,
+    assets: &Res<Assets<Image>>,
+    time: &Res<Time>,
+) -> Option<(Collision, f32)> {
     let a_size = assets.get(a_image).unwrap().size().as_vec2() * a_pos.scale.truncate();
     let b_size = assets.get(b_image).unwrap().size().as_vec2() * b_pos.scale.truncate();
 
@@ -110,13 +131,5 @@ pub fn collide(
     add_velocity_x(&mut new_a_pos_x, &a_col.velocity, &time);
     add_velocity_x(&mut new_b_pos_x, &b_col.velocity, &time);
 
-    let mut new_a_pos_y = a_pos.translation.clone();
-    let mut new_b_pos_y = b_pos.translation.clone();
-    add_velocity_y(&mut new_a_pos_y, &a_col.velocity, &time);
-    add_velocity_y(&mut new_b_pos_y, &b_col.velocity, &time);
-
-    (
-        collide_x(a_pos.translation, new_a_pos_x, a_size, new_b_pos_x, b_size),
-        collide_y(a_pos.translation, new_a_pos_y, a_size, new_b_pos_y, b_size),
-    )
+    x(a_pos.translation, new_a_pos_x, a_size, new_b_pos_x, b_size)
 }
