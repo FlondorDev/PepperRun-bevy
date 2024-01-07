@@ -1,5 +1,5 @@
-use crate::components::{Name, Player, Collider};
-use bevy::prelude::*;
+use crate::components::{Collider, Name, Player};
+use bevy::{prelude::*, render::texture::{ImageSampler, ImageSamplerBorderColor}};
 
 pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font: Handle<Font> = asset_server.load("Roboto-Black.ttf");
@@ -214,19 +214,19 @@ pub fn debug_text(
             match name.0.as_str() {
                 "is_grounded" => {
                     text.sections[1].value = coll.is_grounded.to_string();
-                },
+                }
                 _ => {}
             }
             match name.0.as_str() {
                 "velx" => {
                     text.sections[1].value = coll.velocity.x.to_string();
-                },
+                }
                 _ => {}
             }
             match name.0.as_str() {
                 "vely" => {
                     text.sections[1].value = coll.velocity.y.to_string();
-                },
+                }
                 _ => {}
             }
         }
@@ -235,13 +235,13 @@ pub fn debug_text(
             match name.0.as_str() {
                 "jumps" => {
                     text.sections[1].value = player.jumps.to_string();
-                },
+                }
                 _ => {}
             }
             match name.0.as_str() {
                 "speedmult" => {
                     text.sections[1].value = player.speed_mult.to_string();
-                },
+                }
                 _ => {}
             }
         }

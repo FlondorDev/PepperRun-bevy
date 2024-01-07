@@ -1,4 +1,4 @@
-use bevy::{prelude::*, sprite::collide_aabb::Collision};
+use bevy::{prelude::*, sprite::{collide_aabb::Collision, Mesh2dHandle}};
 
 use crate::{
     components::{Collider, Gravity, Player, Wall},
@@ -12,7 +12,7 @@ const PEPPER_JUMP_FORCE: f32 = 1000.;
 pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         SpriteBundle {
-            texture: asset_server.load("Player.png"),
+            texture: asset_server.get_handle("Player.png").unwrap(),
             transform: Transform::from_xyz(0., 64., 0.),
             ..default()
         },
@@ -25,150 +25,6 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             is_grounded: false,
             velocity: Vec2::ZERO,
         },
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(0., 0., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(64., 0., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(128., 0., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(192., 0., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(256., 0., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(-64., 0., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(-128., 0., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(-128., 64., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(-128., 256., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(192., 128., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(320., 64., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-    ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("Cobble.png"),
-            transform: Transform::from_xyz(320., 0., 0.),
-            ..default()
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
     ));
 }
 
@@ -214,30 +70,39 @@ pub fn move_player(
 
 pub fn player_wall_collision(
     mut player_query: Query<
-        (&mut Transform, &Handle<Image>, &mut Collider, &mut Player),
+        (
+            &mut Transform,
+            &Handle<Image>,
+            &mut Collider,
+            &mut Player,
+            &Sprite,
+        ),
         (With<Player>, Without<Wall>),
     >,
     mut wall_query: Query<
-        (&mut Transform, &Handle<Image>, &mut Collider),
+        (&mut Transform, &Mesh2dHandle, &mut Collider),
         (With<Wall>, Without<Player>),
     >,
-    assets: Res<Assets<Image>>,
+    assets_image: Res<Assets<Image>>,
+    assets_mesh: Res<Assets<Mesh>>,
     time: Res<Time>,
 ) {
     let mut is_grounded = false;
     let player_res = player_query.get_single_mut();
     if player_res.is_ok() {
-        let (mut player_transform, player_texture, mut player_collider, mut player) =
+        let (mut player_transform, player_texture, mut player_collider, mut player, player_sprite) =
             player_res.unwrap();
-        for (mut wall_tranform, wall_texture, wall_collider) in &mut wall_query {
+        for (mut wall_tranform, wall_mesh, wall_collider) in &mut wall_query {
             let collision_y_opt = collide_y(
                 &mut player_transform,
+                player_sprite,
                 player_texture,
                 &player_collider,
                 &mut wall_tranform,
-                wall_texture,
+                wall_mesh,
                 &wall_collider,
-                &assets,
+                &assets_image,
+                &assets_mesh,
                 &time,
             );
 
@@ -245,29 +110,28 @@ pub fn player_wall_collision(
                 let collision_y = collision_y_opt.unwrap();
                 match collision_y.0 {
                     Collision::Bottom => {
-                        player_transform.translation.y -= collision_y.1;
-                        player_collider.velocity.y = 0.;
-                    }
-                    Collision::Top => {
-                        player_transform.translation.y -= collision_y.1;
-                        player.jumps = 2;
-                        player_collider.velocity.y = 0.;
-                        is_grounded = true;
+                        player_transform.translation.y += collision_y.1;
+                        player_collider.velocity.y = wall_collider.velocity.y;
                     }
                     _ => {
-                        println!("mi sono cacato");
+                        player_transform.translation.y -= collision_y.1;
+                        player.jumps = 2;
+                        player_collider.velocity.y = wall_collider.velocity.y;
+                        is_grounded = true;
                     }
                 }
             }
 
             let collision_x_opt = collide_x(
                 &mut player_transform,
+                player_sprite,
                 player_texture,
                 &player_collider,
                 &mut wall_tranform,
-                wall_texture,
+                wall_mesh,
                 &wall_collider,
-                &assets,
+                &assets_image,
+                &assets_mesh,
                 &time,
             );
 
@@ -278,12 +142,9 @@ pub fn player_wall_collision(
                         player_transform.translation.x -= collision_x.1;
                         player_collider.velocity.x = 0.;
                     }
-                    Collision::Left => {
+                    _ => {
                         player_transform.translation.x += collision_x.1;
                         player_collider.velocity.x = 0.;
-                    }
-                    _ => {
-                        println!("mi sono cacato");
                     }
                 }
             }

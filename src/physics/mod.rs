@@ -18,7 +18,8 @@ impl Plugin for PhysicsPlugin {
                     .before(Labels::PhysicsCollision),
                 move_entity
                     .in_set(Labels::PhysicsMove)
-                    .after(Labels::PhysicsCollision),
+                    .after(Labels::PhysicsCollision)
+                    .after(Labels::PhysicsGravity),
             )
                 .after(Labels::Input),
         );

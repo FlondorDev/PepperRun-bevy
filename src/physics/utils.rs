@@ -2,13 +2,13 @@ use bevy::{
     asset::{Assets, Handle},
     ecs::system::Res,
     math::{Vec2, Vec3},
-    render::texture::Image,
-    sprite::collide_aabb::Collision,
+    render::{mesh::Mesh, texture::Image},
+    sprite::{collide_aabb::Collision, Mesh2dHandle, Sprite},
     time::Time,
     transform::components::Transform,
 };
 
-use crate::components::Collider;
+use crate::components::{Collider, PositionToVec2};
 
 #[inline]
 pub fn add_velocity(translation: &mut Vec3, velocity: &Vec2, time: &Res<Time>) {
@@ -17,12 +17,12 @@ pub fn add_velocity(translation: &mut Vec3, velocity: &Vec2, time: &Res<Time>) {
 }
 
 #[inline]
-fn add_velocity_x(translation: &mut Vec3, velocity: &Vec2, time: &Res<Time>) {
+pub fn add_velocity_x(translation: &mut Vec3, velocity: &Vec2, time: &Res<Time>) {
     translation.x += velocity.x * time.delta_seconds();
 }
 
 #[inline]
-fn add_velocity_y(translation: &mut Vec3, velocity: &Vec2, time: &Res<Time>) {
+pub fn add_velocity_y(translation: &mut Vec3, velocity: &Vec2, time: &Res<Time>) {
     translation.y += velocity.y * time.delta_seconds();
 }
 
@@ -94,16 +94,23 @@ fn y(
 
 pub fn collide_y(
     a_pos: &mut Transform,
+    a_sprite: &Sprite,
     a_image: &Handle<Image>,
     a_col: &Collider,
     b_pos: &mut Transform,
-    b_image: &Handle<Image>,
+    b_mesh: &Mesh2dHandle,
     b_col: &Collider,
-    assets: &Res<Assets<Image>>,
+    assets_image: &Res<Assets<Image>>,
+    assets_mesh: &Res<Assets<Mesh>>,
     time: &Res<Time>,
 ) -> Option<(Collision, f32)> {
-    let a_size = assets.get(a_image).unwrap().size().as_vec2() * a_pos.scale.truncate();
-    let b_size = assets.get(b_image).unwrap().size().as_vec2() * b_pos.scale.truncate();
+    let a_size = if let Some(custom_size) = a_sprite.custom_size {
+        custom_size * a_pos.scale.truncate()
+    } else {
+        assets_image.get(a_image).unwrap().size().as_vec2() * a_pos.scale.truncate()
+    };
+
+    let b_size = assets_mesh.get(b_mesh.0.id()).unwrap().size() * b_pos.scale.truncate();
 
     let mut new_a_pos_y = a_pos.translation.clone();
     let mut new_b_pos_y = b_pos.translation.clone();
@@ -115,16 +122,24 @@ pub fn collide_y(
 
 pub fn collide_x(
     a_pos: &mut Transform,
+    a_sprite: &Sprite,
     a_image: &Handle<Image>,
     a_col: &Collider,
     b_pos: &mut Transform,
-    b_image: &Handle<Image>,
+    b_mesh: &Mesh2dHandle,
     b_col: &Collider,
-    assets: &Res<Assets<Image>>,
+    assets_image: &Res<Assets<Image>>,
+    assets_mesh: &Res<Assets<Mesh>>,
     time: &Res<Time>,
 ) -> Option<(Collision, f32)> {
-    let a_size = assets.get(a_image).unwrap().size().as_vec2() * a_pos.scale.truncate();
-    let b_size = assets.get(b_image).unwrap().size().as_vec2() * b_pos.scale.truncate();
+    let a_size = if let Some(custom_size) = a_sprite.custom_size {
+        custom_size * a_pos.scale.truncate()
+    } else {
+        assets_image.get(a_image).unwrap().size().as_vec2() * a_pos.scale.truncate()
+    };
+
+    let b_size = assets_mesh.get(b_mesh.0.id()).unwrap().size() * b_pos.scale.truncate();
+
 
     let mut new_a_pos_x = a_pos.translation.clone();
     let mut new_b_pos_x = b_pos.translation.clone();
