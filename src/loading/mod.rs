@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::texture::ImageSampler};
 
-use crate::components::AssetsLoading;
+use crate::components::{AssetsLoading, ApplicationState};
 
 pub struct LoadingPlugin;
 
@@ -25,6 +25,7 @@ fn check_assets_ready(
     server: Res<AssetServer>,
     mut loading: ResMut<AssetsLoading>,
     mut assets: ResMut<Assets<Image>>,
+    mut app_state: ResMut<NextState<ApplicationState>>
 ) {
     use bevy::asset::LoadState;
     if loading
@@ -46,6 +47,7 @@ fn check_assets_ready(
                             address_mode_w: bevy::render::texture::ImageAddressMode::Repeat,
                             ..Default::default()
                         });
+                        app_state.set(ApplicationState::AssetsLoaded);
                     true
                 }
                 _ => {

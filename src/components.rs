@@ -1,6 +1,16 @@
 use bevy::{prelude::*, render::mesh::VertexAttributeValues};
 use serde::{Deserialize, Serialize};
 
+
+#[derive(States, Default, Debug, Hash, Eq, PartialEq, Clone)]
+pub enum ApplicationState
+{
+	#[default]
+	LoadingAssets,
+	AssetsLoaded,
+	Game,
+}
+
 #[derive(Component)]
 pub struct Name(pub String);
 
@@ -34,30 +44,33 @@ pub enum Labels {
 #[derive(Resource)]
 pub struct AssetsLoading(pub Vec<Handle<Image>>, pub bool);
 
+#[derive(Resource)]
+pub struct CurrentLevel(pub Option<String>, pub Option<Level>);
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Level {
-    pub schema: Vec<LevelSchema>
+    pub schema: Vec<LevelSchema>,
+    pub player: Vec2Ser
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LevelSchema {
     pub position: Vec2Ser,
     pub texture: String,
-    pub size: Vec2Ser
+    pub size: Vec2Ser,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-
 pub struct Vec2Ser {
     pub x: f32,
-    pub y: f32
+    pub y: f32,
 }
 
 impl Vec2Ser {
     pub fn as_vec2(&self) -> Vec2 {
         Vec2 {
             x: self.x,
-            y: self.y
+            y: self.y,
         }
     }
 }
@@ -71,10 +84,8 @@ impl PositionToVec2 for Mesh {
         match self.attribute(Mesh::ATTRIBUTE_POSITION).unwrap() {
             VertexAttributeValues::Float32x3(values) => {
                 Vec2::new(values[0][0].abs() * 2., values[0][1].abs() * 2.)
-            },
-            _=>{
-                Vec2::ZERO
             }
+            _ => Vec2::ZERO,
         }
     }
 }

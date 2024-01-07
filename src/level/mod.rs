@@ -1,4 +1,7 @@
 mod systems;
+pub mod utils;
+
+use crate::components::{ApplicationState, CurrentLevel};
 
 use self::systems::*;
 use bevy::prelude::*;
@@ -7,6 +10,7 @@ pub struct LevelPlugin;
 
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+        app.insert_resource(CurrentLevel(None, None));
+        app.add_systems(OnEnter(ApplicationState::AssetsLoaded), setup);
     }
 }

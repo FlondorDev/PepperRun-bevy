@@ -1,32 +1,16 @@
-use bevy::{prelude::*, sprite::{collide_aabb::Collision, Mesh2dHandle}};
+use bevy::{
+    prelude::*,
+    sprite::{collide_aabb::Collision, Mesh2dHandle}, math::vec2,
+};
 
 use crate::{
-    components::{Collider, Gravity, Player, Wall},
-    physics::utils::{collide_x, collide_y},
+    components::{Collider, CurrentLevel, Gravity, Player, Wall},
+    physics::utils::{collide_x, collide_y}, level::utils::position_to_world,
 };
 
 const PLAYER_SPEED: f32 = 500.;
 const PEPPER_SPEED_MULTIPLIER: f32 = 2.;
 const PEPPER_JUMP_FORCE: f32 = 1000.;
-
-pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.get_handle("Player.png").unwrap(),
-            transform: Transform::from_xyz(0., 64., 0.),
-            ..default()
-        },
-        Gravity,
-        Player {
-            speed_mult: 1.,
-            jumps: 2,
-        },
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-    ));
-}
 
 pub fn move_player(
     keyboard_input: Res<Input<KeyCode>>,
@@ -34,6 +18,7 @@ pub fn move_player(
         (&mut Sprite, &mut Collider, &mut Player, &mut Transform),
         (With<Player>, Without<Camera2d>),
     >,
+    level: Res<CurrentLevel>,
 ) {
     let player_res = player_query.get_single_mut();
     if player_res.is_ok() {
@@ -63,7 +48,9 @@ pub fn move_player(
         collider.velocity.y = collider.velocity.y + (direction.y * PEPPER_JUMP_FORCE);
 
         if keyboard_input.pressed(KeyCode::R) {
-            transform.translation = Vec3::new(0., 64., 0.);
+            let level = level.1.as_ref().unwrap();
+            let org_pos = position_to_world(level.player.as_vec2(), Vec2::ONE);
+            transform.translation = Vec3::new(org_pos.x, org_pos.y, 0.);
         }
     }
 }

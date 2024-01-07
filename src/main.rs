@@ -7,9 +7,11 @@ mod loading;
 mod level;
 
 use bevy::prelude::*;
+use components::ApplicationState;
 
 fn main() {
     App::new()
+        .add_state::<ApplicationState>()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_plugins(loading::LoadingPlugin)
         .add_plugins(level::LevelPlugin)
