@@ -1,12 +1,12 @@
 mod camera;
 mod components;
 mod debug;
+mod level;
+mod loading;
 mod physics;
 mod player;
-mod loading;
-mod level;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, winit::WinitSettings};
 use components::ApplicationState;
 
 fn main() {

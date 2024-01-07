@@ -2,7 +2,7 @@ use std::fs;
 
 use bevy::{prelude::*, render::mesh::VertexAttributeValues, sprite::MaterialMesh2dBundle};
 
-use crate::components::{Collider, CurrentLevel, Gravity, Level, Player, Wall};
+use crate::components::{Collider, CurrentLevel, Gravity, Level, Player, Wall, ApplicationState};
 
 use super::utils::position_to_world;
 
@@ -13,6 +13,7 @@ pub fn setup(
     images: Res<Assets<Image>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut current_level: ResMut<CurrentLevel>,
+    mut app_state: ResMut<NextState<ApplicationState>>
 ) {
     let levels = fs::read("assets/levels/level.json").unwrap();
 
@@ -83,4 +84,5 @@ pub fn setup(
 
     current_level.0 = Some("level".to_string());
     current_level.1 = Some(level);
+    app_state.set(ApplicationState::Game);
 }
