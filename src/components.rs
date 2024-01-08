@@ -1,15 +1,16 @@
 use bevy::{prelude::*, render::mesh::VertexAttributeValues};
 use serde::{Deserialize, Serialize};
 
-
 #[derive(States, Default, Debug, Hash, Eq, PartialEq, Clone)]
-pub enum ApplicationState
-{
-	#[default]
-	LoadingAssets,
-	AssetsLoaded,
-	Game,
+pub enum ApplicationState {
+    #[default]
+    LoadingAssets,
+    AssetsLoaded,
+    Game,
 }
+
+#[derive(Component)]
+pub struct UiEntityRef(pub Entity);
 
 #[derive(Component)]
 pub struct Name(pub String);
@@ -53,7 +54,7 @@ pub struct CurrentLevel(pub Option<String>, pub Option<LevelSchema>);
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LevelSchema {
     pub schema: Vec<ObjectSchema>,
-    pub player: Vec2Ser
+    pub player: Vec2Ser,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -80,6 +81,7 @@ impl Vec2Ser {
 
 pub trait PositionToVec2 {
     fn size(&self) -> Vec2;
+    fn flip_uv(&mut self, flip_x: bool);
 }
 
 impl PositionToVec2 for Mesh {
@@ -89,6 +91,19 @@ impl PositionToVec2 for Mesh {
                 Vec2::new(values[0][0].abs() * 2., values[0][1].abs() * 2.)
             }
             _ => Vec2::ZERO,
+        }
+    }
+
+    fn flip_uv(&mut self, flip_x: bool) {
+        match self.attribute_mut(Mesh::ATTRIBUTE_UV_0).unwrap() {
+            VertexAttributeValues::Float32x2(values) => {
+                for uv in values.iter_mut() {
+                    if flip_x && uv[0].is_sign_positive() || !flip_x && uv[0].is_sign_negative() {
+                        uv[0] *= -1.;
+                    }
+                }
+            }
+            _ => {}
         }
     }
 }

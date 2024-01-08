@@ -94,22 +94,15 @@ fn y(
 
 pub fn collide_y(
     a_pos: &mut Transform,
-    a_sprite: &Sprite,
-    a_image: &Handle<Image>,
+    a_mesh: &Mesh2dHandle,
     a_col: &Collider,
     b_pos: &mut Transform,
     b_mesh: &Mesh2dHandle,
     b_col: &Collider,
-    assets_image: &Res<Assets<Image>>,
     assets_mesh: &Res<Assets<Mesh>>,
     time: &Res<Time>,
 ) -> Option<(Collision, f32)> {
-    let a_size = if let Some(custom_size) = a_sprite.custom_size {
-        custom_size * a_pos.scale.truncate()
-    } else {
-        assets_image.get(a_image).unwrap().size().as_vec2() * a_pos.scale.truncate()
-    };
-
+    let a_size = assets_mesh.get(a_mesh.0.id()).unwrap().size() * a_pos.scale.truncate();
     let b_size = assets_mesh.get(b_mesh.0.id()).unwrap().size() * b_pos.scale.truncate();
 
     let mut new_a_pos_y = a_pos.translation.clone();
@@ -122,22 +115,15 @@ pub fn collide_y(
 
 pub fn collide_x(
     a_pos: &mut Transform,
-    a_sprite: &Sprite,
-    a_image: &Handle<Image>,
+    a_mesh: &Mesh2dHandle,
     a_col: &Collider,
     b_pos: &mut Transform,
     b_mesh: &Mesh2dHandle,
     b_col: &Collider,
-    assets_image: &Res<Assets<Image>>,
     assets_mesh: &Res<Assets<Mesh>>,
     time: &Res<Time>,
 ) -> Option<(Collision, f32)> {
-    let a_size = if let Some(custom_size) = a_sprite.custom_size {
-        custom_size * a_pos.scale.truncate()
-    } else {
-        assets_image.get(a_image).unwrap().size().as_vec2() * a_pos.scale.truncate()
-    };
-
+    let a_size = assets_mesh.get(a_mesh.0.id()).unwrap().size() * a_pos.scale.truncate();
     let b_size = assets_mesh.get(b_mesh.0.id()).unwrap().size() * b_pos.scale.truncate();
 
 

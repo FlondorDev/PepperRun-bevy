@@ -1,11 +1,13 @@
 use bevy::{
+    math::vec2,
     prelude::*,
-    sprite::{collide_aabb::Collision, Mesh2dHandle}, math::vec2,
+    sprite::{collide_aabb::Collision, Mesh2dHandle},
 };
 
 use crate::{
-    components::{Collider, CurrentLevel, Gravity, Player, Wall},
-    physics::utils::{collide_x, collide_y}, level::utils::position_to_world,
+    components::{Collider, CurrentLevel, Gravity, Player, PositionToVec2, Wall},
+    level::utils::position_to_world,
+    physics::utils::{collide_x, collide_y},
 };
 
 const PLAYER_SPEED: f32 = 500.;
@@ -15,24 +17,26 @@ const PEPPER_JUMP_FORCE: f32 = 1000.;
 pub fn move_player(
     keyboard_input: Res<Input<KeyCode>>,
     mut player_query: Query<
-        (&mut Sprite, &mut Collider, &mut Player, &mut Transform),
+        (&Mesh2dHandle, &mut Collider, &mut Player, &mut Transform),
         (With<Player>, Without<Camera2d>),
     >,
     level: Res<CurrentLevel>,
+    mut assets_mesh: ResMut<Assets<Mesh>>,
 ) {
     let player_res = player_query.get_single_mut();
     if player_res.is_ok() {
-        let (mut sprite, mut collider, mut player, mut transform) = player_res.unwrap();
+        let (mesh, mut collider, mut player, mut transform) = player_res.unwrap();
+        let mesh = assets_mesh.get_mut(mesh.0.id()).unwrap();
         let mut direction = Vec2 { x: 0., y: 0. };
 
         if keyboard_input.pressed(KeyCode::A) {
             direction.x -= 1.0;
-            sprite.flip_x = true;
+            mesh.flip_uv(true);
         }
 
         if keyboard_input.pressed(KeyCode::D) {
             direction.x += 1.0;
-            sprite.flip_x = false;
+            mesh.flip_uv(false);
         }
 
         collider.velocity.x = direction.x * (PLAYER_SPEED * player.speed_mult);
@@ -57,38 +61,29 @@ pub fn move_player(
 
 pub fn player_wall_collision(
     mut player_query: Query<
-        (
-            &mut Transform,
-            &Handle<Image>,
-            &mut Collider,
-            &mut Player,
-            &Sprite,
-        ),
+        (&mut Transform, &Mesh2dHandle, &mut Collider, &mut Player),
         (With<Player>, Without<Wall>),
     >,
     mut wall_query: Query<
         (&mut Transform, &Mesh2dHandle, &mut Collider),
         (With<Wall>, Without<Player>),
     >,
-    assets_image: Res<Assets<Image>>,
     assets_mesh: Res<Assets<Mesh>>,
     time: Res<Time>,
 ) {
     let mut is_grounded = false;
     let player_res = player_query.get_single_mut();
     if player_res.is_ok() {
-        let (mut player_transform, player_texture, mut player_collider, mut player, player_sprite) =
+        let (mut player_transform, player_mesh, mut player_collider, mut player) =
             player_res.unwrap();
         for (mut wall_tranform, wall_mesh, wall_collider) in &mut wall_query {
             let collision_y_opt = collide_y(
                 &mut player_transform,
-                player_sprite,
-                player_texture,
+                player_mesh,
                 &player_collider,
                 &mut wall_tranform,
                 wall_mesh,
                 &wall_collider,
-                &assets_image,
                 &assets_mesh,
                 &time,
             );
@@ -111,13 +106,11 @@ pub fn player_wall_collision(
 
             let collision_x_opt = collide_x(
                 &mut player_transform,
-                player_sprite,
-                player_texture,
+                player_mesh,
                 &player_collider,
                 &mut wall_tranform,
                 wall_mesh,
                 &wall_collider,
-                &assets_image,
                 &assets_mesh,
                 &time,
             );

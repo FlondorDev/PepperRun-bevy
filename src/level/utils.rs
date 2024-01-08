@@ -17,14 +17,14 @@ pub fn position_to_world(position: Vec2, size: Vec2) -> Vec2 {
     position * vec2(64., 64.) + size * vec2(64., 64.) * 0.5
 }
 
-pub fn spawn_object(
+pub fn generate_mesh2d(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
     meshes: &mut ResMut<Assets<Mesh>>,
     images: &Res<Assets<Image>>,
     materials: &mut ResMut<Assets<ColorMaterial>>,
     schema: &ObjectSchema,
-) {
+) -> MaterialMesh2dBundle<ColorMaterial> {
     let texture: Handle<Image> = asset_server.get_handle(schema.texture.clone()).unwrap();
     let texture_size: &Image = images.get(texture.id()).unwrap();
     let size = schema.size.as_vec2();
@@ -48,18 +48,32 @@ pub fn spawn_object(
 
     let mesh_handle = meshes.add(mesh);
 
+    let material: Handle<ColorMaterial> = materials.add(
+        asset_server
+            .get_handle(schema.texture.clone())
+            .unwrap()
+            .into(),
+    );
+
+    MaterialMesh2dBundle {
+        mesh: mesh_handle.into(),
+        transform: Transform::from_xyz(position.x, position.y, 0.),
+        material: material,
+        ..Default::default()
+    }
+}
+
+pub fn spawn_object(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    images: &Res<Assets<Image>>,
+    materials: &mut ResMut<Assets<ColorMaterial>>,
+    schema: &ObjectSchema,
+) {
+    let mesh = generate_mesh2d(commands, asset_server, meshes, images, materials, schema);
     commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: mesh_handle.into(),
-            transform: Transform::from_xyz(position.x, position.y, 0.),
-            material: materials.add(
-                asset_server
-                    .get_handle(schema.texture.clone())
-                    .unwrap()
-                    .into(),
-            ),
-            ..Default::default()
-        },
+        mesh,
         Collider {
             is_grounded: false,
             velocity: Vec2::ZERO,

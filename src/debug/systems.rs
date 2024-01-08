@@ -1,4 +1,4 @@
-use crate::components::{CurrentLevel, Level, Name, ObjectSchema, Vec2Ser};
+use crate::components::{CurrentLevel, Level, Name, ObjectSchema, UiEntityRef, Vec2Ser, Player, Collider};
 use crate::level::utils::spawn_object;
 use bevy::prelude::*;
 
@@ -234,6 +234,7 @@ pub fn button_system(
             &mut BackgroundColor,
             &mut BorderColor,
             &Children,
+            Option<&UiEntityRef>,
         ),
         (Changed<Interaction>, With<Button>),
     >,
@@ -243,8 +244,11 @@ pub fn button_system(
     mut meshes: ResMut<Assets<Mesh>>,
     images: Res<Assets<Image>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    materials_query: Query<&mut Handle<ColorMaterial>>,
 ) {
-    for (interaction, mut color, mut border_color, children) in &mut interaction_query {
+    for (interaction, mut color, mut border_color, children, ui_entity_ref) in
+        &mut interaction_query
+    {
         let text = text_query.get_mut(children[0]).unwrap();
         match *interaction {
             Interaction::Pressed => {
@@ -260,14 +264,8 @@ pub fn button_system(
                         &mut materials,
                         &ObjectSchema {
                             texture: "Cobble.png".to_string(),
-                            position: Vec2Ser {
-                                x: 5.,
-                                y: 3.
-                            },
-                            size: Vec2Ser {
-                                x: 1.,
-                                y: 1.
-                            },
+                            position: Vec2Ser { x: 5., y: 3. },
+                            size: Vec2Ser { x: 1., y: 1. },
                         },
                     ),
                     _ => {}
@@ -278,10 +276,20 @@ pub fn button_system(
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
                 border_color.0 = Color::WHITE;
+                if ui_entity_ref.is_some() {
+                    let handle_material: &Handle<ColorMaterial> = materials_query.get(ui_entity_ref.unwrap().0).unwrap();
+                    let material = materials.get_mut(handle_material).unwrap();
+                    material.color = Color::RED;
+                }
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
                 border_color.0 = Color::BLACK;
+                if ui_entity_ref.is_some() {
+                    let handle_material: &Handle<ColorMaterial> = materials_query.get(ui_entity_ref.unwrap().0).unwrap();
+                    let material = materials.get_mut(handle_material).unwrap();
+                    material.color = Color::WHITE;
+                }
             }
         }
     }
@@ -290,7 +298,7 @@ pub fn button_system(
 pub fn update_list(
     mut interaction_query: Query<(Entity, Option<&Children>), With<ScrollingList>>,
     mut commands: Commands,
-    level_query: Query<&Name, With<Level>>,
+    level_query: Query<(&Name, Entity), With<Level>>,
     asset_server: Res<AssetServer>,
     mut button_query: Query<&Children, With<Button>>,
     mut text_query: Query<&mut Text>,
@@ -345,7 +353,9 @@ pub fn update_list(
         }
 
         if child_opt.is_some() {
-            for (child, name) in child_opt.unwrap().iter().zip(level_query.iter()) {
+            for (child, (name, entity)) in child_opt.unwrap().iter().zip(level_query.iter()) {
+                let mut button_entity = commands.get_entity(*child).unwrap();
+                button_entity.try_insert(UiEntityRef(entity));
                 let button = button_query.get_mut(*child).unwrap();
                 let mut text = text_query.get_mut(button[0]).unwrap();
                 text.sections[0].value = name.0.clone();
@@ -354,249 +364,249 @@ pub fn update_list(
     }
 }
 
-// pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-//     let font: Handle<Font> = asset_server.load("Roboto-Black.ttf");
-//     commands.spawn((
-//         TextBundle::from_sections([
-//             TextSection::new(
-//                 "X: ",
-//                 TextStyle {
-//                     font: font.clone(),
-//                     font_size: 40.,
-//                     color: Color::WHITE,
-//                     ..default()
-//                 },
-//             ),
-//             TextSection::from_style(TextStyle {
-//                 font: font.clone(),
-//                 font_size: 40.,
-//                 color: Color::WHITE,
-//                 ..default()
-//             }),
-//         ])
-//         .with_style(Style {
-//             position_type: PositionType::Absolute,
-//             top: Val::Auto,
-//             left: Val::Auto,
-//             ..default()
-//         }),
-//         Name("X".into()),
-//     ));
-//     commands.spawn((
-//         TextBundle::from_sections([
-//             TextSection::new(
-//                 "Y: ",
-//                 TextStyle {
-//                     font: font.clone(),
-//                     font_size: 40.,
-//                     color: Color::WHITE,
-//                     ..default()
-//                 },
-//             ),
-//             TextSection::from_style(TextStyle {
-//                 font: font.clone(),
-//                 font_size: 40.,
-//                 color: Color::WHITE,
-//                 ..default()
-//             }),
-//         ])
-//         .with_style(Style {
-//             position_type: PositionType::Absolute,
-//             top: Val::Px(40.),
-//             left: Val::Auto,
-//             ..default()
-//         }),
-//         Name("Y".into()),
-//     ));
-//     commands.spawn((
-//         TextBundle::from_sections([
-//             TextSection::new(
-//                 "Is Grounded: ",
-//                 TextStyle {
-//                     font: font.clone(),
-//                     font_size: 40.,
-//                     color: Color::WHITE,
-//                     ..default()
-//                 },
-//             ),
-//             TextSection::from_style(TextStyle {
-//                 font: font.clone(),
-//                 font_size: 40.,
-//                 color: Color::WHITE,
-//                 ..default()
-//             }),
-//         ])
-//         .with_style(Style {
-//             position_type: PositionType::Absolute,
-//             top: Val::Px(80.),
-//             left: Val::Auto,
-//             ..default()
-//         }),
-//         Name("is_grounded".into()),
-//     ));
-//     commands.spawn((
-//         TextBundle::from_sections([
-//             TextSection::new(
-//                 "Vel X: ",
-//                 TextStyle {
-//                     font: font.clone(),
-//                     font_size: 40.,
-//                     color: Color::WHITE,
-//                     ..default()
-//                 },
-//             ),
-//             TextSection::from_style(TextStyle {
-//                 font: font.clone(),
-//                 font_size: 40.,
-//                 color: Color::WHITE,
-//                 ..default()
-//             }),
-//         ])
-//         .with_style(Style {
-//             position_type: PositionType::Absolute,
-//             top: Val::Px(120.),
-//             left: Val::Auto,
-//             ..default()
-//         }),
-//         Name("velx".into()),
-//     ));
-//     commands.spawn((
-//         TextBundle::from_sections([
-//             TextSection::new(
-//                 "Vel Y: ",
-//                 TextStyle {
-//                     font: font.clone(),
-//                     font_size: 40.,
-//                     color: Color::WHITE,
-//                     ..default()
-//                 },
-//             ),
-//             TextSection::from_style(TextStyle {
-//                 font: font.clone(),
-//                 font_size: 40.,
-//                 color: Color::WHITE,
-//                 ..default()
-//             }),
-//         ])
-//         .with_style(Style {
-//             position_type: PositionType::Absolute,
-//             top: Val::Px(160.),
-//             left: Val::Auto,
-//             ..default()
-//         }),
-//         Name("vely".into()),
-//     ));
-//     commands.spawn((
-//         TextBundle::from_sections([
-//             TextSection::new(
-//                 "Jumps: ",
-//                 TextStyle {
-//                     font: font.clone(),
-//                     font_size: 40.,
-//                     color: Color::WHITE,
-//                     ..default()
-//                 },
-//             ),
-//             TextSection::from_style(TextStyle {
-//                 font: font.clone(),
-//                 font_size: 40.,
-//                 color: Color::WHITE,
-//                 ..default()
-//             }),
-//         ])
-//         .with_style(Style {
-//             position_type: PositionType::Absolute,
-//             top: Val::Px(200.),
-//             left: Val::Auto,
-//             ..default()
-//         }),
-//         Name("jumps".into()),
-//     ));
-//     commands.spawn((
-//         TextBundle::from_sections([
-//             TextSection::new(
-//                 "Speed Mult: ",
-//                 TextStyle {
-//                     font: font.clone(),
-//                     font_size: 40.,
-//                     color: Color::WHITE,
-//                     ..default()
-//                 },
-//             ),
-//             TextSection::from_style(TextStyle {
-//                 font: font.clone(),
-//                 font_size: 40.,
-//                 color: Color::WHITE,
-//                 ..default()
-//             }),
-//         ])
-//         .with_style(Style {
-//             position_type: PositionType::Absolute,
-//             top: Val::Px(240.),
-//             left: Val::Auto,
-//             ..default()
-//         }),
-//         Name("speedmult".into()),
-//     ));
-// }
+pub fn setup_2(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let font: Handle<Font> = asset_server.load("Roboto-Black.ttf");
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "X: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Auto,
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("X".into()),
+    ));
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Y: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(40.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("Y".into()),
+    ));
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Is Grounded: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(80.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("is_grounded".into()),
+    ));
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Vel X: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(120.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("velx".into()),
+    ));
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Vel Y: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(160.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("vely".into()),
+    ));
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Jumps: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(200.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("jumps".into()),
+    ));
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Speed Mult: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(240.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("speedmult".into()),
+    ));
+}
 
-// pub fn debug_text(
-//     player_position: Query<&Transform, With<Player>>,
-//     player_collider: Query<&Collider, With<Player>>,
-//     player: Query<&Player>,
-//     mut debug_texts: Query<(&mut Text, &Name)>,
-// ) {
-//     for (mut text, name) in debug_texts.iter_mut() {
-//         let pos_res = player_position.get_single();
-//         let coll_res = player_collider.get_single();
-//         let player_res = player.get_single();
-//         if pos_res.is_ok() {
-//             let pos = pos_res.unwrap();
-//             match name.0.as_str() {
-//                 "X" => {
-//                     text.sections[1].value = pos.translation.x.to_string();
-//                 }
-//                 "Y" => {
-//                     text.sections[1].value = pos.translation.y.to_string();
-//                 }
-//                 _ => {}
-//             }
-//         }
-//         if coll_res.is_ok() {
-//             let coll = coll_res.unwrap();
-//             match name.0.as_str() {
-//                 "is_grounded" => {
-//                     text.sections[1].value = coll.is_grounded.to_string();
-//                 }
-//                 _ => {}
-//             }
-//             match name.0.as_str() {
-//                 "velx" => {
-//                     text.sections[1].value = coll.velocity.x.to_string();
-//                 }
-//                 _ => {}
-//             }
-//             match name.0.as_str() {
-//                 "vely" => {
-//                     text.sections[1].value = coll.velocity.y.to_string();
-//                 }
-//                 _ => {}
-//             }
-//         }
-//         if player_res.is_ok() {
-//             let player = player_res.unwrap();
-//             match name.0.as_str() {
-//                 "jumps" => {
-//                     text.sections[1].value = player.jumps.to_string();
-//                 }
-//                 _ => {}
-//             }
-//             match name.0.as_str() {
-//                 "speedmult" => {
-//                     text.sections[1].value = player.speed_mult.to_string();
-//                 }
-//                 _ => {}
-//             }
-//         }
-//     }
-// }
+pub fn debug_text(
+    player_position: Query<&Transform, With<Player>>,
+    player_collider: Query<&Collider, With<Player>>,
+    player: Query<&Player>,
+    mut debug_texts: Query<(&mut Text, &Name)>,
+) {
+    for (mut text, name) in debug_texts.iter_mut() {
+        let pos_res = player_position.get_single();
+        let coll_res = player_collider.get_single();
+        let player_res = player.get_single();
+        if pos_res.is_ok() {
+            let pos = pos_res.unwrap();
+            match name.0.as_str() {
+                "X" => {
+                    text.sections[1].value = pos.translation.x.to_string();
+                }
+                "Y" => {
+                    text.sections[1].value = pos.translation.y.to_string();
+                }
+                _ => {}
+            }
+        }
+        if coll_res.is_ok() {
+            let coll = coll_res.unwrap();
+            match name.0.as_str() {
+                "is_grounded" => {
+                    text.sections[1].value = coll.is_grounded.to_string();
+                }
+                _ => {}
+            }
+            match name.0.as_str() {
+                "velx" => {
+                    text.sections[1].value = coll.velocity.x.to_string();
+                }
+                _ => {}
+            }
+            match name.0.as_str() {
+                "vely" => {
+                    text.sections[1].value = coll.velocity.y.to_string();
+                }
+                _ => {}
+            }
+        }
+        if player_res.is_ok() {
+            let player = player_res.unwrap();
+            match name.0.as_str() {
+                "jumps" => {
+                    text.sections[1].value = player.jumps.to_string();
+                }
+                _ => {}
+            }
+            match name.0.as_str() {
+                "speedmult" => {
+                    text.sections[1].value = player.speed_mult.to_string();
+                }
+                _ => {}
+            }
+        }
+    }
+}

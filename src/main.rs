@@ -6,7 +6,7 @@ mod loading;
 mod physics;
 mod player;
 
-use bevy::{prelude::*, winit::WinitSettings};
+use bevy::prelude::*;
 use components::ApplicationState;
 
 fn main() {
