@@ -30,6 +30,9 @@ pub struct Collider {
 }
 
 #[derive(Component)]
+pub struct Level;
+
+#[derive(Component)]
 pub struct Wall;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
@@ -45,16 +48,16 @@ pub enum Labels {
 pub struct AssetsLoading(pub Vec<Handle<Image>>, pub bool);
 
 #[derive(Resource)]
-pub struct CurrentLevel(pub Option<String>, pub Option<Level>);
+pub struct CurrentLevel(pub Option<String>, pub Option<LevelSchema>);
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Level {
-    pub schema: Vec<LevelSchema>,
+pub struct LevelSchema {
+    pub schema: Vec<ObjectSchema>,
     pub player: Vec2Ser
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct LevelSchema {
+pub struct ObjectSchema {
     pub position: Vec2Ser,
     pub texture: String,
     pub size: Vec2Ser,
