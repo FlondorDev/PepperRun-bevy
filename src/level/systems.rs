@@ -23,24 +23,15 @@ pub fn setup(
     let level =
         serde_json::from_str::<LevelSchema>(String::from_utf8(levels).unwrap().as_str()).unwrap();
 
-    let position = position_to_world(level.player.as_vec2(), Vec2::ONE);
-
     let mesh = generate_mesh2d(
-        &mut commands,
         &asset_server,
         &mut meshes,
         &images,
         &mut materials,
         &ObjectSchema {
-            position: Vec2Ser {
-                x: position.x,
-                y: position.y,
-            },
-            size: Vec2Ser {
-                x: 1.,
-                y: 1.,
-            },
-            texture: "Player.png".to_string()
+            position: level.player.clone(),
+            size: Vec2Ser { x: 1., y: 1. },
+            texture: "Player.png".to_string(),
         },
     );
 

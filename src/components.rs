@@ -1,3 +1,4 @@
+
 use bevy::{prelude::*, render::mesh::VertexAttributeValues};
 use serde::{Deserialize, Serialize};
 
@@ -8,6 +9,17 @@ pub enum ApplicationState {
     AssetsLoaded,
     Game,
 }
+
+#[derive(States, Default, Debug, Hash, Eq, PartialEq, Clone)]
+pub enum DebugState {
+    #[default]
+    None,
+    Debug,
+    Editor,
+}
+
+#[derive(Component)]
+pub struct DebugUI(pub DebugState);
 
 #[derive(Component)]
 pub struct UiEntityRef(pub Entity);

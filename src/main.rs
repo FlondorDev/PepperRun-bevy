@@ -7,11 +7,12 @@ mod physics;
 mod player;
 
 use bevy::prelude::*;
-use components::ApplicationState;
+use components::{ApplicationState, DebugState};
 
 fn main() {
     App::new()
         .add_state::<ApplicationState>()
+        .add_state::<DebugState>()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_plugins(loading::LoadingPlugin)
         .add_plugins(level::LevelPlugin)

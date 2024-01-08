@@ -1,4 +1,7 @@
-use crate::components::{CurrentLevel, Level, Name, ObjectSchema, UiEntityRef, Vec2Ser, Player, Collider};
+use crate::components::{
+    Collider, CurrentLevel, DebugState, DebugUI, Level, Name, ObjectSchema, Player, UiEntityRef,
+    Vec2Ser,
+};
 use crate::level::utils::spawn_object;
 use bevy::prelude::*;
 
@@ -10,7 +13,214 @@ use bevy::{
     input::mouse::{MouseScrollUnit, MouseWheel},
 };
 
-pub fn setup(
+pub fn clear_ui(mut commands: Commands, mut query: Query<Entity, With<DebugUI>>) {
+    query.for_each(|e| commands.entity(e).despawn_recursive());
+}
+
+pub fn setup_debug(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    current_level: Res<CurrentLevel>,
+) {
+    let font: Handle<Font> = asset_server.load("Roboto-Black.ttf");
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "X: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Auto,
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("X".into()),
+        DebugUI(DebugState::Debug),
+    ));
+
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Y: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(40.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("Y".into()),
+        DebugUI(DebugState::Debug),
+    ));
+
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Is Grounded: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(80.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("is_grounded".into()),
+        DebugUI(DebugState::Debug),
+    ));
+
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Vel X: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(120.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("velx".into()),
+        DebugUI(DebugState::Debug),
+    ));
+
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Vel Y: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(160.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("vely".into()),
+        DebugUI(DebugState::Debug),
+    ));
+
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Jumps: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(200.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("jumps".into()),
+        DebugUI(DebugState::Debug),
+    ));
+
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Speed Mult: ",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: font.clone(),
+                font_size: 40.,
+                color: Color::WHITE,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(240.),
+            left: Val::Auto,
+            ..default()
+        }),
+        Name("speedmult".into()),
+        DebugUI(DebugState::Debug),
+    ));
+}
+
+pub fn setup_editor(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     current_level: Res<CurrentLevel>,
@@ -18,15 +228,18 @@ pub fn setup(
     let level_name = current_level.0.as_ref().unwrap();
     // root node
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                justify_content: JustifyContent::SpaceBetween,
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    justify_content: JustifyContent::SpaceBetween,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
+            DebugUI(DebugState::Editor),
+        ))
         .with_children(|parent| {
             // left vertical fill (border)
             parent
@@ -194,6 +407,25 @@ pub fn setup(
         });
 }
 
+pub fn switch_state(
+    keyboard_input: Res<Input<KeyCode>>,
+    current_debug_state: Res<State<DebugState>>,
+    mut debug_state: ResMut<NextState<DebugState>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::P) {
+        match current_debug_state.get() {
+            DebugState::Debug => {
+                debug_state.set(DebugState::Editor);
+            }
+            DebugState::Editor => {
+                debug_state.set(DebugState::None);
+            }
+            DebugState::None => {
+                debug_state.set(DebugState::Debug);
+            }
+        }
+    }
+}
 #[derive(Component, Default)]
 pub struct ScrollingList {
     position: f32,
@@ -277,7 +509,8 @@ pub fn button_system(
                 *color = HOVERED_BUTTON.into();
                 border_color.0 = Color::WHITE;
                 if ui_entity_ref.is_some() {
-                    let handle_material: &Handle<ColorMaterial> = materials_query.get(ui_entity_ref.unwrap().0).unwrap();
+                    let handle_material: &Handle<ColorMaterial> =
+                        materials_query.get(ui_entity_ref.unwrap().0).unwrap();
                     let material = materials.get_mut(handle_material).unwrap();
                     material.color = Color::RED;
                 }
@@ -286,7 +519,8 @@ pub fn button_system(
                 *color = NORMAL_BUTTON.into();
                 border_color.0 = Color::BLACK;
                 if ui_entity_ref.is_some() {
-                    let handle_material: &Handle<ColorMaterial> = materials_query.get(ui_entity_ref.unwrap().0).unwrap();
+                    let handle_material: &Handle<ColorMaterial> =
+                        materials_query.get(ui_entity_ref.unwrap().0).unwrap();
                     let material = materials.get_mut(handle_material).unwrap();
                     material.color = Color::WHITE;
                 }
@@ -362,192 +596,6 @@ pub fn update_list(
             }
         }
     }
-}
-
-pub fn setup_2(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font: Handle<Font> = asset_server.load("Roboto-Black.ttf");
-    commands.spawn((
-        TextBundle::from_sections([
-            TextSection::new(
-                "X: ",
-                TextStyle {
-                    font: font.clone(),
-                    font_size: 40.,
-                    color: Color::WHITE,
-                    ..default()
-                },
-            ),
-            TextSection::from_style(TextStyle {
-                font: font.clone(),
-                font_size: 40.,
-                color: Color::WHITE,
-                ..default()
-            }),
-        ])
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Auto,
-            left: Val::Auto,
-            ..default()
-        }),
-        Name("X".into()),
-    ));
-    commands.spawn((
-        TextBundle::from_sections([
-            TextSection::new(
-                "Y: ",
-                TextStyle {
-                    font: font.clone(),
-                    font_size: 40.,
-                    color: Color::WHITE,
-                    ..default()
-                },
-            ),
-            TextSection::from_style(TextStyle {
-                font: font.clone(),
-                font_size: 40.,
-                color: Color::WHITE,
-                ..default()
-            }),
-        ])
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(40.),
-            left: Val::Auto,
-            ..default()
-        }),
-        Name("Y".into()),
-    ));
-    commands.spawn((
-        TextBundle::from_sections([
-            TextSection::new(
-                "Is Grounded: ",
-                TextStyle {
-                    font: font.clone(),
-                    font_size: 40.,
-                    color: Color::WHITE,
-                    ..default()
-                },
-            ),
-            TextSection::from_style(TextStyle {
-                font: font.clone(),
-                font_size: 40.,
-                color: Color::WHITE,
-                ..default()
-            }),
-        ])
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(80.),
-            left: Val::Auto,
-            ..default()
-        }),
-        Name("is_grounded".into()),
-    ));
-    commands.spawn((
-        TextBundle::from_sections([
-            TextSection::new(
-                "Vel X: ",
-                TextStyle {
-                    font: font.clone(),
-                    font_size: 40.,
-                    color: Color::WHITE,
-                    ..default()
-                },
-            ),
-            TextSection::from_style(TextStyle {
-                font: font.clone(),
-                font_size: 40.,
-                color: Color::WHITE,
-                ..default()
-            }),
-        ])
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(120.),
-            left: Val::Auto,
-            ..default()
-        }),
-        Name("velx".into()),
-    ));
-    commands.spawn((
-        TextBundle::from_sections([
-            TextSection::new(
-                "Vel Y: ",
-                TextStyle {
-                    font: font.clone(),
-                    font_size: 40.,
-                    color: Color::WHITE,
-                    ..default()
-                },
-            ),
-            TextSection::from_style(TextStyle {
-                font: font.clone(),
-                font_size: 40.,
-                color: Color::WHITE,
-                ..default()
-            }),
-        ])
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(160.),
-            left: Val::Auto,
-            ..default()
-        }),
-        Name("vely".into()),
-    ));
-    commands.spawn((
-        TextBundle::from_sections([
-            TextSection::new(
-                "Jumps: ",
-                TextStyle {
-                    font: font.clone(),
-                    font_size: 40.,
-                    color: Color::WHITE,
-                    ..default()
-                },
-            ),
-            TextSection::from_style(TextStyle {
-                font: font.clone(),
-                font_size: 40.,
-                color: Color::WHITE,
-                ..default()
-            }),
-        ])
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(200.),
-            left: Val::Auto,
-            ..default()
-        }),
-        Name("jumps".into()),
-    ));
-    commands.spawn((
-        TextBundle::from_sections([
-            TextSection::new(
-                "Speed Mult: ",
-                TextStyle {
-                    font: font.clone(),
-                    font_size: 40.,
-                    color: Color::WHITE,
-                    ..default()
-                },
-            ),
-            TextSection::from_style(TextStyle {
-                font: font.clone(),
-                font_size: 40.,
-                color: Color::WHITE,
-                ..default()
-            }),
-        ])
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(240.),
-            left: Val::Auto,
-            ..default()
-        }),
-        Name("speedmult".into()),
-    ));
 }
 
 pub fn debug_text(

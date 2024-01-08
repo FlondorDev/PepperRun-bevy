@@ -14,11 +14,10 @@ use crate::components::{Collider, Level, Name, ObjectSchema, Wall};
 
 #[inline]
 pub fn position_to_world(position: Vec2, size: Vec2) -> Vec2 {
-    position * vec2(64., 64.) + size * vec2(64., 64.) * 0.5
+    (position * vec2(64., 64.)) + (size * vec2(64., 64.) * 0.5)
 }
 
 pub fn generate_mesh2d(
-    commands: &mut Commands,
     asset_server: &Res<AssetServer>,
     meshes: &mut ResMut<Assets<Mesh>>,
     images: &Res<Assets<Image>>,
@@ -71,7 +70,7 @@ pub fn spawn_object(
     materials: &mut ResMut<Assets<ColorMaterial>>,
     schema: &ObjectSchema,
 ) {
-    let mesh = generate_mesh2d(commands, asset_server, meshes, images, materials, schema);
+    let mesh = generate_mesh2d(asset_server, meshes, images, materials, schema);
     commands.spawn((
         mesh,
         Collider {
