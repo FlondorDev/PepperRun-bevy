@@ -21,6 +21,9 @@ pub enum DebugState {
 #[derive(Component)]
 pub struct DebugUI(pub DebugState);
 
+#[derive(Resource)]
+pub struct SelectedUiEntity(pub Option<Entity>, pub Option<Entity>);
+
 #[derive(Component)]
 pub struct UiEntityRef(pub Entity);
 

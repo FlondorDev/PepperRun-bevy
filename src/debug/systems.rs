@@ -1,6 +1,6 @@
 use crate::components::{
-    Collider, CurrentLevel, DebugState, DebugUI, Level, Name, ObjectSchema, Player, UiEntityRef,
-    Vec2Ser,
+    Collider, CurrentLevel, DebugState, DebugUI, Level, Name, ObjectSchema, Player,
+    SelectedUiEntity, UiEntityRef, Vec2Ser,
 };
 use crate::level::utils::spawn_object;
 use bevy::prelude::*;
@@ -19,12 +19,16 @@ pub fn clear_ui(
     interaction_query: Query<&UiEntityRef, With<Button>>,
     materials_query: Query<&mut Handle<ColorMaterial>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut selected_ui_entity: ResMut<SelectedUiEntity>,
 ) {
     interaction_query.for_each(|ui_entity_ref| {
         let handle_material: &Handle<ColorMaterial> = materials_query.get(ui_entity_ref.0).unwrap();
         let material = materials.get_mut(handle_material).unwrap();
         material.color = Color::WHITE;
     });
+
+    selected_ui_entity.0 = None;
+    selected_ui_entity.1 = None;
 
     query.for_each(|e| commands.entity(e).despawn_recursive());
 }
@@ -440,8 +444,10 @@ pub fn button_system(
             &mut BorderColor,
             &Children,
             Option<&UiEntityRef>,
+            Changed<Interaction>,
+            Entity
         ),
-        (Changed<Interaction>, With<Button>),
+        With<Button>,
     >,
     mut text_query: Query<&mut Text>,
     mut commands: Commands,
@@ -449,17 +455,28 @@ pub fn button_system(
     mut meshes: ResMut<Assets<Mesh>>,
     images: Res<Assets<Image>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut selected_ui_entity: ResMut<SelectedUiEntity>,
     materials_query: Query<&mut Handle<ColorMaterial>>,
 ) {
-    for (interaction, mut color, mut border_color, children, ui_entity_ref) in
+    for (interaction, mut color, mut border_color, children, ui_entity_ref, changed, ent) in
         &mut interaction_query
     {
         let text = text_query.get_mut(children[0]).unwrap();
         match *interaction {
-            Interaction::Pressed => {
+            Interaction::Pressed if changed => {
+                *color = PRESSED_BUTTON.into();
+                border_color.0 = Color::RED;
+
                 match text.sections[0].value.as_str() {
                     "-" => {
-                        println!("swaga");
+                        if let Some(selected_ent) = selected_ui_entity.0 {
+                            let entity_command = commands.entity(selected_ent);
+                            entity_command.despawn_recursive();
+                            let button_entity_command = commands.entity(selected_ui_entity.1.unwrap());
+                            button_entity_command.despawn_recursive();
+                            selected_ui_entity.0 = None;
+                            selected_ui_entity.1 = None;
+                        }
                     }
                     "+" => spawn_object(
                         &mut commands,
@@ -473,31 +490,68 @@ pub fn button_system(
                             size: Vec2Ser { x: 1., y: 1. },
                         },
                     ),
-                    _ => {}
+                    _ => {
+                        if ui_entity_ref.is_some() {
+                            let handle_material: &Handle<ColorMaterial> =
+                                materials_query.get(ui_entity_ref.unwrap().0).unwrap();
+                            let material = materials.get_mut(handle_material).unwrap();
+                            material.color = Color::BLUE;
+                            match selected_ui_entity.0 {
+                                Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {
+                                    selected_ui_entity.0 = None;
+                                    selected_ui_entity.1 = None;
+                                }
+                                None | Some(_) => {
+                                    selected_ui_entity.0 = Some(ui_entity_ref.unwrap().0);
+                                    selected_ui_entity.1 = Some(ent);
+                                }
+                            }
+                        }
+                    }
                 }
-                *color = PRESSED_BUTTON.into();
-                border_color.0 = Color::RED;
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
                 border_color.0 = Color::WHITE;
-                if ui_entity_ref.is_some() {
-                    let handle_material: &Handle<ColorMaterial> =
-                        materials_query.get(ui_entity_ref.unwrap().0).unwrap();
-                    let material = materials.get_mut(handle_material).unwrap();
-                    material.color = Color::RED;
+
+                match text.sections[0].value.as_str() {
+                    "-" => {}
+                    "+" => {}
+                    _ => match selected_ui_entity.0 {
+                        Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {}
+                        _ => {
+                            if ui_entity_ref.is_some() {
+                                let handle_material: &Handle<ColorMaterial> =
+                                    materials_query.get(ui_entity_ref.unwrap().0).unwrap();
+                                let material = materials.get_mut(handle_material).unwrap();
+                                material.color = Color::RED;
+                            }
+                        }
+                    },
                 }
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
                 border_color.0 = Color::BLACK;
-                if ui_entity_ref.is_some() {
-                    let handle_material: &Handle<ColorMaterial> =
-                        materials_query.get(ui_entity_ref.unwrap().0).unwrap();
-                    let material = materials.get_mut(handle_material).unwrap();
-                    material.color = Color::WHITE;
+                match text.sections[0].value.as_str() {
+                    "-" => {}
+                    "+" => {}
+                    _ => {
+                        if ui_entity_ref.is_some() {
+                            match selected_ui_entity.0 {
+                                Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {}
+                                _ => {
+                                    let handle_material: &Handle<ColorMaterial> =
+                                        materials_query.get(ui_entity_ref.unwrap().0).unwrap();
+                                    let material = materials.get_mut(handle_material).unwrap();
+                                    material.color = Color::WHITE;
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            _ => {}
         }
     }
 }

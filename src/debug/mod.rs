@@ -2,16 +2,17 @@ mod systems;
 use bevy::prelude::*;
 use systems::*;
 
-use crate::components::{ApplicationState, DebugState, Labels};
+use crate::components::{DebugState, Labels, SelectedUiEntity};
 
 pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(SelectedUiEntity(None, None));
         app.add_systems(OnEnter(DebugState::Debug), setup_debug)
             .add_systems(OnEnter(DebugState::Editor), setup_editor)
-            .add_systems(OnExit(DebugState::Debug),clear_ui)
-            .add_systems(OnExit(DebugState::Editor),clear_ui)
+            .add_systems(OnExit(DebugState::Debug), clear_ui)
+            .add_systems(OnExit(DebugState::Editor), clear_ui)
             .add_systems(Update, switch_state)
             .add_systems(
                 FixedUpdate,
