@@ -1,5 +1,4 @@
-
-use bevy::{prelude::*, render::mesh::VertexAttributeValues};
+use bevy::{asset::LoadedFolder, prelude::*, render::mesh::VertexAttributeValues};
 use serde::{Deserialize, Serialize};
 
 #[derive(States, Default, Debug, Hash, Eq, PartialEq, Clone)]
@@ -23,6 +22,9 @@ pub struct DebugUI(pub DebugState);
 
 #[derive(Resource)]
 pub struct SelectedUiEntity(pub Option<Entity>, pub Option<Entity>);
+
+#[derive(Resource)]
+pub struct SelectedUiMode(pub String);
 
 #[derive(Component)]
 pub struct UiEntityRef(pub Entity);
@@ -61,7 +63,7 @@ pub enum Labels {
 }
 
 #[derive(Resource)]
-pub struct AssetsLoading(pub Vec<Handle<Image>>, pub bool);
+pub struct AssetsLoading(pub Vec<Handle<LoadedFolder>>, pub bool);
 
 #[derive(Resource)]
 pub struct CurrentLevel(pub Option<String>, pub Option<LevelSchema>);
@@ -96,6 +98,8 @@ impl Vec2Ser {
 
 pub trait PositionToVec2 {
     fn size(&self) -> Vec2;
+    fn set_size(&mut self, size: Vec2);
+    fn set_uv_size(&mut self, size: Vec2);
     fn flip_uv(&mut self, flip_x: bool);
 }
 
@@ -107,6 +111,41 @@ impl PositionToVec2 for Mesh {
             }
             _ => Vec2::ZERO,
         }
+    }
+
+    fn set_size(&mut self, size: Vec2) {
+        match self.attribute_mut(Mesh::ATTRIBUTE_POSITION).unwrap() {
+            VertexAttributeValues::Float32x3(values) => {
+                values[0] = [-(size.x * 0.5), -(size.y * 0.5), 0.];
+                values[1] = [-(size.x * 0.5), (size.y * 0.5), 0.];
+                values[2] = [(size.x * 0.5), (size.y * 0.5), 0.];
+                values[3] = [(size.x * 0.5), -(size.y * 0.5), 0.];
+            }
+            _ => {}
+        }
+
+        self.set_uv_size(size);
+    }
+
+    fn set_uv_size(&mut self, size: Vec2) {
+        let uvs = self.attribute_mut(Mesh::ATTRIBUTE_UV_0).unwrap();
+
+        match uvs {
+            VertexAttributeValues::Float32x2(uv) => {
+                //uv[0][0] = 0;
+                uv[0][1] = size.y / 64.;
+
+                // uv[1][0] = 0;
+                // uv[1][1] = 0;
+
+                uv[2][0] = size.x / 64.;
+                // uv[2][1] = 0;
+
+                uv[3][0] = size.x / 64.;
+                uv[3][1] = size.y / 64.;
+            }
+            _ => (),
+        };
     }
 
     fn flip_uv(&mut self, flip_x: bool) {

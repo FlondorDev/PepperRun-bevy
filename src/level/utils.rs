@@ -10,7 +10,7 @@ use bevy::{
     transform::components::Transform,
 };
 
-use crate::components::{Collider, Level, Name, ObjectSchema, Wall};
+use crate::components::{Collider, Level, Name, ObjectSchema, PositionToVec2, Wall};
 
 #[inline]
 pub fn position_to_world(position: Vec2, size: Vec2) -> Vec2 {
@@ -24,7 +24,9 @@ pub fn generate_mesh2d(
     materials: &mut ResMut<Assets<ColorMaterial>>,
     schema: &ObjectSchema,
 ) -> MaterialMesh2dBundle<ColorMaterial> {
-    let texture: Handle<Image> = asset_server.get_handle(schema.texture.clone()).unwrap();
+    let texture: Handle<Image> = asset_server
+        .get_handle(format!("texture/{}", schema.texture.clone()))
+        .unwrap();
     let texture_size: &Image = images.get(texture.id()).unwrap();
     let size = schema.size.as_vec2();
     let position = position_to_world(schema.position.as_vec2(), size);
@@ -33,26 +35,11 @@ pub fn generate_mesh2d(
         ..Default::default()
     }
     .into();
-    let uvs = mesh.attribute_mut(Mesh::ATTRIBUTE_UV_0).unwrap();
-
-    match uvs {
-        VertexAttributeValues::Float32x2(values) => {
-            for uv in values.iter_mut() {
-                uv[0] *= size.x;
-                uv[1] *= size.y;
-            }
-        }
-        _ => (),
-    };
+    mesh.set_uv_size(size * 64.);
 
     let mesh_handle = meshes.add(mesh);
 
-    let material: Handle<ColorMaterial> = materials.add(
-        asset_server
-            .get_handle(schema.texture.clone())
-            .unwrap()
-            .into(),
-    );
+    let material: Handle<ColorMaterial> = materials.add(texture.into());
 
     MaterialMesh2dBundle {
         mesh: mesh_handle.into(),

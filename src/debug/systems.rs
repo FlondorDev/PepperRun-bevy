@@ -1,10 +1,11 @@
 use crate::components::{
-    Collider, CurrentLevel, DebugState, DebugUI, Level, Name, ObjectSchema, Player,
-    SelectedUiEntity, UiEntityRef, Vec2Ser,
+    Collider, CurrentLevel, DebugState, DebugUI, Level, Name, ObjectSchema, Player, PositionToVec2,
+    SelectedUiEntity, SelectedUiMode, UiEntityRef, Vec2Ser,
 };
 use crate::level::utils::spawn_object;
 use bevy::prelude::*;
 
+use bevy::sprite::{Mesh2d, Mesh2dHandle};
 use bevy::{
     a11y::{
         accesskit::{NodeBuilder, Role},
@@ -13,6 +14,15 @@ use bevy::{
     input::mouse::{MouseScrollUnit, MouseWheel},
 };
 
+#[derive(Component, Default)]
+pub struct ScrollingList {
+    position: f32,
+}
+
+const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
+const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
+const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
+
 pub fn clear_ui(
     mut commands: Commands,
     query: Query<Entity, With<DebugUI>>,
@@ -20,6 +30,7 @@ pub fn clear_ui(
     materials_query: Query<&mut Handle<ColorMaterial>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut selected_ui_entity: ResMut<SelectedUiEntity>,
+    mut selected_ui_mode: ResMut<SelectedUiMode>,
 ) {
     interaction_query.for_each(|ui_entity_ref| {
         let handle_material: &Handle<ColorMaterial> = materials_query.get(ui_entity_ref.0).unwrap();
@@ -235,6 +246,10 @@ pub fn setup_editor(
                         .spawn(NodeBundle {
                             style: Style {
                                 width: Val::Percent(100.),
+                                height: Val::Percent(100.),
+                                display: Display::Flex,
+                                flex_direction: FlexDirection::Column,
+                                align_items: AlignItems::Center,
                                 ..default()
                             },
                             background_color: Color::rgb(0.15, 0.15, 0.15).into(),
@@ -252,7 +267,12 @@ pub fn setup_editor(
                                     },
                                 )
                                 .with_style(Style {
-                                    margin: UiRect::all(Val::Px(5.)),
+                                    margin: UiRect {
+                                        left: Val::Px(5.),
+                                        right: Val::Px(5.),
+                                        top: Val::Px(5.),
+                                        bottom: Val::Px(20.),
+                                    },
                                     ..default()
                                 }),
                                 // Because this is a distinct label widget and
@@ -260,6 +280,92 @@ pub fn setup_editor(
                                 // for accessibility to treat the text accordingly.
                                 Label,
                             ));
+
+                            parent
+                                .spawn(NodeBundle {
+                                    style: Style {
+                                        width: Val::Percent(100.),
+                                        height: Val::Percent(100.),
+                                        display: Display::Flex,
+                                        flex_direction: FlexDirection::Column,
+                                        justify_content: JustifyContent::Center,
+                                        align_content: AlignContent::Center,
+                                        ..default()
+                                    },
+                                    background_color: Color::rgb(0.15, 0.15, 0.15).into(),
+                                    ..default()
+                                })
+                                .with_children(|parent| {
+                                    parent
+                                        .spawn(NodeBundle {
+                                            style: Style {
+                                                width: Val::Percent(100.),
+                                                display: Display::Flex,
+                                                flex_direction: FlexDirection::Row,
+                                                justify_content: JustifyContent::SpaceEvenly,
+                                                ..default()
+                                            },
+                                            background_color: Color::rgb(0.15, 0.15, 0.15).into(),
+                                            ..default()
+                                        })
+                                        .with_children(|parent| {
+                                            parent
+                                                .spawn(ButtonBundle {
+                                                    style: Style {
+                                                        width: Val::Px(70.0),
+                                                        height: Val::Px(60.0),
+                                                        border: UiRect::all(Val::Px(5.0)),
+                                                        // horizontally center child text
+                                                        justify_content: JustifyContent::Center,
+                                                        // vertically center child text
+                                                        align_items: AlignItems::Center,
+                                                        ..default()
+                                                    },
+                                                    border_color: BorderColor(Color::BLACK),
+                                                    background_color: NORMAL_BUTTON.into(),
+                                                    ..default()
+                                                })
+                                                .with_children(|parent| {
+                                                    parent.spawn(TextBundle::from_section(
+                                                        "XY",
+                                                        TextStyle {
+                                                            font: asset_server
+                                                                .load("Roboto-Black.ttf"),
+                                                            font_size: 40.0,
+                                                            color: Color::rgb(0.9, 0.9, 0.9),
+                                                        },
+                                                    ));
+                                                });
+
+                                            parent
+                                                .spawn(ButtonBundle {
+                                                    style: Style {
+                                                        width: Val::Px(70.0),
+                                                        height: Val::Px(60.0),
+                                                        border: UiRect::all(Val::Px(5.0)),
+                                                        // horizontally center child text
+                                                        justify_content: JustifyContent::Center,
+                                                        // vertically center child text
+                                                        align_items: AlignItems::Center,
+                                                        ..default()
+                                                    },
+                                                    border_color: BorderColor(Color::BLACK),
+                                                    background_color: NORMAL_BUTTON.into(),
+                                                    ..default()
+                                                })
+                                                .with_children(|parent| {
+                                                    parent.spawn(TextBundle::from_section(
+                                                        "WH",
+                                                        TextStyle {
+                                                            font: asset_server
+                                                                .load("Roboto-Black.ttf"),
+                                                            font_size: 40.0,
+                                                            color: Color::rgb(0.9, 0.9, 0.9),
+                                                        },
+                                                    ));
+                                                });
+                                        });
+                                });
                         });
                 });
             // right vertical fill
@@ -403,10 +509,6 @@ pub fn switch_state(
         }
     }
 }
-#[derive(Component, Default)]
-pub struct ScrollingList {
-    position: f32,
-}
 
 pub fn mouse_scroll(
     mut mouse_wheel_events: EventReader<MouseWheel>,
@@ -432,10 +534,6 @@ pub fn mouse_scroll(
     }
 }
 
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
-
 pub fn button_system(
     mut interaction_query: Query<
         (
@@ -445,7 +543,7 @@ pub fn button_system(
             &Children,
             Option<&UiEntityRef>,
             Changed<Interaction>,
-            Entity
+            Entity,
         ),
         With<Button>,
     >,
@@ -456,101 +554,110 @@ pub fn button_system(
     images: Res<Assets<Image>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut selected_ui_entity: ResMut<SelectedUiEntity>,
+    mut selected_ui_mode: ResMut<SelectedUiMode>,
     materials_query: Query<&mut Handle<ColorMaterial>>,
 ) {
     for (interaction, mut color, mut border_color, children, ui_entity_ref, changed, ent) in
         &mut interaction_query
     {
         let text = text_query.get_mut(children[0]).unwrap();
+        *color = PRESSED_BUTTON.into();
+        border_color.0 = Color::RED;
         match *interaction {
-            Interaction::Pressed if changed => {
-                *color = PRESSED_BUTTON.into();
-                border_color.0 = Color::RED;
-
-                match text.sections[0].value.as_str() {
-                    "-" => {
-                        if let Some(selected_ent) = selected_ui_entity.0 {
-                            let entity_command = commands.entity(selected_ent);
-                            entity_command.despawn_recursive();
-                            let button_entity_command = commands.entity(selected_ui_entity.1.unwrap());
-                            button_entity_command.despawn_recursive();
-                            selected_ui_entity.0 = None;
-                            selected_ui_entity.1 = None;
+            Interaction::Pressed if changed => match text.sections[0].value.as_str() {
+                "-" => {
+                    if let Some(selected_ent) = selected_ui_entity.0 {
+                        let entity_command = commands.entity(selected_ent);
+                        entity_command.despawn_recursive();
+                        let button_entity_command = commands.entity(selected_ui_entity.1.unwrap());
+                        button_entity_command.despawn_recursive();
+                        selected_ui_entity.0 = None;
+                        selected_ui_entity.1 = None;
+                    }
+                }
+                "+" => spawn_object(
+                    &mut commands,
+                    &mut asset_server,
+                    &mut meshes,
+                    &images,
+                    &mut materials,
+                    &ObjectSchema {
+                        texture: "Cobble.png".to_string(),
+                        position: Vec2Ser { x: 5., y: 3. },
+                        size: Vec2Ser { x: 1., y: 1. },
+                    },
+                ),
+                "WH" => {
+                    selected_ui_mode.0 = String::from("WH");
+                }
+                "XY" => {
+                    selected_ui_mode.0 = String::from("XY");
+                }
+                _ => {
+                    if ui_entity_ref.is_some() {
+                        let handle_material: &Handle<ColorMaterial> =
+                            materials_query.get(ui_entity_ref.unwrap().0).unwrap();
+                        let material = materials.get_mut(handle_material).unwrap();
+                        material.color = Color::BLUE;
+                        match selected_ui_entity.0 {
+                            Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {
+                                selected_ui_entity.0 = None;
+                                selected_ui_entity.1 = None;
+                            }
+                            None | Some(_) => {
+                                selected_ui_entity.0 = Some(ui_entity_ref.unwrap().0);
+                                selected_ui_entity.1 = Some(ent);
+                            }
                         }
                     }
-                    "+" => spawn_object(
-                        &mut commands,
-                        &mut asset_server,
-                        &mut meshes,
-                        &images,
-                        &mut materials,
-                        &ObjectSchema {
-                            texture: "Cobble.png".to_string(),
-                            position: Vec2Ser { x: 5., y: 3. },
-                            size: Vec2Ser { x: 1., y: 1. },
-                        },
-                    ),
+                }
+            },
+            Interaction::Hovered => match text.sections[0].value.as_str() {
+                "-" | "+" | "WH" | "XY" => match &selected_ui_mode.0 {
+                    mode if mode == text.sections[0].value.as_str() => {}
+                    _ => {
+                        *color = HOVERED_BUTTON.into();
+                        border_color.0 = Color::WHITE;
+                    }
+                },
+                _ => match selected_ui_entity.0 {
+                    Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {}
                     _ => {
                         if ui_entity_ref.is_some() {
                             let handle_material: &Handle<ColorMaterial> =
                                 materials_query.get(ui_entity_ref.unwrap().0).unwrap();
                             let material = materials.get_mut(handle_material).unwrap();
-                            material.color = Color::BLUE;
-                            match selected_ui_entity.0 {
-                                Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {
-                                    selected_ui_entity.0 = None;
-                                    selected_ui_entity.1 = None;
-                                }
-                                None | Some(_) => {
-                                    selected_ui_entity.0 = Some(ui_entity_ref.unwrap().0);
-                                    selected_ui_entity.1 = Some(ent);
-                                }
-                            }
+                            material.color = Color::RED;
+                            *color = HOVERED_BUTTON.into();
+                            border_color.0 = Color::WHITE;
                         }
                     }
-                }
-            }
-            Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
-                border_color.0 = Color::WHITE;
-
-                match text.sections[0].value.as_str() {
-                    "-" => {}
-                    "+" => {}
-                    _ => match selected_ui_entity.0 {
-                        Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {}
-                        _ => {
-                            if ui_entity_ref.is_some() {
+                },
+            },
+            Interaction::None => match text.sections[0].value.as_str() {
+                "-" | "+" | "WH" | "XY" => match &selected_ui_mode.0 {
+                    mode if mode == text.sections[0].value.as_str() => {}
+                    _ => {
+                        *color = NORMAL_BUTTON.into();
+                        border_color.0 = Color::BLACK;
+                    }
+                },
+                _ => {
+                    if ui_entity_ref.is_some() {
+                        match selected_ui_entity.0 {
+                            Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {}
+                            _ => {
                                 let handle_material: &Handle<ColorMaterial> =
                                     materials_query.get(ui_entity_ref.unwrap().0).unwrap();
                                 let material = materials.get_mut(handle_material).unwrap();
-                                material.color = Color::RED;
-                            }
-                        }
-                    },
-                }
-            }
-            Interaction::None => {
-                *color = NORMAL_BUTTON.into();
-                border_color.0 = Color::BLACK;
-                match text.sections[0].value.as_str() {
-                    "-" => {}
-                    "+" => {}
-                    _ => {
-                        if ui_entity_ref.is_some() {
-                            match selected_ui_entity.0 {
-                                Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {}
-                                _ => {
-                                    let handle_material: &Handle<ColorMaterial> =
-                                        materials_query.get(ui_entity_ref.unwrap().0).unwrap();
-                                    let material = materials.get_mut(handle_material).unwrap();
-                                    material.color = Color::WHITE;
-                                }
+                                material.color = Color::WHITE;
+                                *color = NORMAL_BUTTON.into();
+                                border_color.0 = Color::BLACK;
                             }
                         }
                     }
                 }
-            }
+            },
             _ => {}
         }
     }
@@ -681,6 +788,54 @@ pub fn debug_text(
                     text.sections[1].value = player.speed_mult.to_string();
                 }
                 _ => {}
+            }
+        }
+    }
+}
+
+pub fn move_items(
+    keyboard_input: Res<Input<KeyCode>>,
+    selected_ui_entity: ResMut<SelectedUiEntity>,
+    selected_ui_mode: ResMut<SelectedUiMode>,
+    mut assets_mesh: ResMut<Assets<Mesh>>,
+    mut query: Query<(&mut Transform, &Mesh2dHandle)>,
+) {
+    if let Some(ent) = selected_ui_entity.0 {
+        let (mut transform, mesh_handle) = query.get_mut(ent).unwrap();
+        let mesh = assets_mesh.get_mut(mesh_handle.0.id()).unwrap();
+        let mut size = mesh.size();
+
+        if keyboard_input.just_pressed(KeyCode::Up) {
+            if selected_ui_mode.0 == "XY" {
+                transform.translation.y += 64.;
+            } else {
+                size.y += 64.;
+                transform.translation.y += 32.;
+                mesh.set_size(size);
+            }
+        } else if keyboard_input.just_pressed(KeyCode::Down) {
+            if selected_ui_mode.0 == "XY" {
+                transform.translation.y -= 64.;
+            } else if size.y > 64. {
+                size.y -= 64.;
+                transform.translation.y -= 32.;
+                mesh.set_size(size);
+            }
+        } else if keyboard_input.just_pressed(KeyCode::Left) {
+            if selected_ui_mode.0 == "XY" {
+                transform.translation.x -= 64.;
+            } else if size.x > 64. {
+                size.x -= 64.;
+                transform.translation.x -= 32.;
+                mesh.set_size(size);
+            }
+        } else if keyboard_input.just_pressed(KeyCode::Right) {
+            if selected_ui_mode.0 == "XY" {
+                transform.translation.x += 64.;
+            } else {
+                size.x += 64.;
+                transform.translation.x += 32.;
+                mesh.set_size(size);
             }
         }
     }

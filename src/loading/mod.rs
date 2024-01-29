@@ -1,6 +1,6 @@
-use bevy::{prelude::*, render::texture::ImageSampler};
+use bevy::{asset::{ AssetPath, LoadedFolder}, prelude::*, render::texture::{ImageLoaderSettings, ImageSampler}};
 
-use crate::components::{AssetsLoading, ApplicationState};
+use crate::components::{ApplicationState, AssetsLoading};
 
 pub struct LoadingPlugin;
 
@@ -17,42 +17,42 @@ impl Plugin for LoadingPlugin {
 
 fn setup(server: Res<AssetServer>, mut loading: ResMut<AssetsLoading>) {
     // add them all to our collection for tracking
-    loading.0.push(server.load("Cobble.png"));
-    loading.0.push(server.load("Player.png"));
+    loading.0.push(server.load_folder("texture"));
 }
 
 fn check_assets_ready(
     server: Res<AssetServer>,
     mut loading: ResMut<AssetsLoading>,
-    mut assets: ResMut<Assets<Image>>,
-    mut app_state: ResMut<NextState<ApplicationState>>
+    loaded_folder_assets: ResMut<Assets<LoadedFolder>>,
+    mut image_assets: ResMut<Assets<Image>>,
+    mut app_state: ResMut<NextState<ApplicationState>>,
 ) {
-    use bevy::asset::LoadState;
     if loading
         .0
         .iter()
         .map(|h| {
-            match server.load_state(h.id()) {
-                LoadState::Failed => {
+            match server.is_loaded_with_dependencies(h.id()) {
+                false => {
                     // one of our assets had an error
                     false
                 }
-                LoadState::Loaded => {
+                true => {
                     // all assets are now ready
-                    let ima = assets.get_mut(h.id()).unwrap();
-                    ima.sampler =
-                        ImageSampler::Descriptor(bevy::render::texture::ImageSamplerDescriptor {
-                            address_mode_u: bevy::render::texture::ImageAddressMode::Repeat,
-                            address_mode_v: bevy::render::texture::ImageAddressMode::Repeat,
-                            address_mode_w: bevy::render::texture::ImageAddressMode::Repeat,
-                            ..Default::default()
-                        });
-                        app_state.set(ApplicationState::AssetsLoaded);
+                    let folder = loaded_folder_assets.get(h.id()).unwrap();
+
+                    for file in &folder.handles {
+                        let ima = image_assets.get_mut(file.id()).unwrap();
+                        ima.sampler = ImageSampler::Descriptor(
+                            bevy::render::texture::ImageSamplerDescriptor {
+                                address_mode_u: bevy::render::texture::ImageAddressMode::Repeat,
+                                address_mode_v: bevy::render::texture::ImageAddressMode::Repeat,
+                                address_mode_w: bevy::render::texture::ImageAddressMode::Repeat,
+                                ..Default::default()
+                            },
+                        );
+                    }
+                    app_state.set(ApplicationState::AssetsLoaded);
                     true
-                }
-                _ => {
-                    false
-                    // NotLoaded/Loading: not fully ready yet
                 }
             }
         })
