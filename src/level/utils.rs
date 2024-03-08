@@ -10,7 +10,7 @@ use bevy::{
     transform::components::Transform,
 };
 
-use crate::components::{Collider, Level, Name, ObjectSchema, PositionToVec2, Wall};
+use crate::components::{Collider, Level, Name, ObjectSchema, Oscillante, Pepper, PositionToVec2, Wall};
 
 #[inline]
 pub fn position_to_world(position: Vec2, size: Vec2) -> Vec2 {
@@ -36,7 +36,6 @@ pub fn generate_mesh2d(
     }
     .into();
     mesh.set_uv_size(size * 64.);
-    
 
     let mesh_handle = meshes.add(mesh);
 
@@ -59,22 +58,46 @@ pub fn spawn_object(
     schema: &ObjectSchema,
 ) {
     let mesh = generate_mesh2d(asset_server, meshes, images, materials, schema);
-    commands.spawn((
-        mesh,
-        Collider {
-            is_grounded: false,
-            velocity: Vec2::ZERO,
-        },
-        Wall,
-        Level,
-        Name(
-            schema
-                .texture
-                .clone()
-                .split_once(".")
-                .unwrap()
-                .0
-                .to_string(),
-        ),
-    ));
+    if schema.texture.contains("Pepper") {
+        commands.spawn((
+            mesh,
+            Collider {
+                is_grounded: false,
+                velocity: Vec2::ZERO,
+            },
+            Oscillante,
+            Pepper,
+            Level,
+            Name(
+                schema
+                    .texture
+                    .clone()
+                    .split_once(".")
+                    .unwrap()
+                    .0
+                    .to_string(),
+            ),
+        ));
+    }else {
+        commands.spawn((
+            mesh,
+            Collider {
+                is_grounded: false,
+                velocity: Vec2::ZERO,
+            },
+            Wall,
+            Level,
+            Name(
+                schema
+                    .texture
+                    .clone()
+                    .split_once(".")
+                    .unwrap()
+                    .0
+                    .to_string(),
+            ),
+        ));
+    }
+
+    
 }

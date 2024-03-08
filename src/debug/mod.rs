@@ -19,15 +19,18 @@ impl Plugin for DebugPlugin {
                 FixedUpdate,
                 debug_text
                     .after(Labels::PhysicsMove)
-                    .run_if(state_exists_and_equals::<DebugState>(DebugState::Debug)),
+                    .run_if(in_state(DebugState::Debug)),
             )
             .add_systems(
                 Update,
-                (mouse_scroll, reset_button, button_system, update_list, move_items).run_if(state_exists_and_equals::<
-                    DebugState,
-                >(
-                    DebugState::Editor
-                )),
+                (
+                    mouse_scroll,
+                    reset_button,
+                    button_system,
+                    update_list,
+                    move_items,
+                )
+                    .run_if(in_state(DebugState::Editor)),
             );
     }
 }

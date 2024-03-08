@@ -1,10 +1,11 @@
 use crate::components::{
-    Collider, CurrentLevel, DebugState, DebugUI, Level, Name, ObjectSchema, Player, PositionToVec2, SetSize,
-    SelectedUiEntity, SelectedUiMode, UiEntityRef, Vec2Ser,
+    Collider, CurrentLevel, DebugState, DebugUI, Level, Name, ObjectSchema, Player, PositionToVec2,
+    SelectedUiEntity, SelectedUiMode, SetSize, UiEntityRef, Vec2Ser,
 };
 use crate::level::utils::spawn_object;
 use bevy::prelude::*;
 
+use bevy::render::primitives::Aabb;
 use bevy::sprite::{Mesh2d, Mesh2dHandle};
 use bevy::{
     a11y::{
@@ -13,7 +14,6 @@ use bevy::{
     },
     input::mouse::{MouseScrollUnit, MouseWheel},
 };
-use bevy::render::primitives::Aabb;
 
 #[derive(Component, Default)]
 pub struct ScrollingList {
@@ -641,7 +641,6 @@ pub fn reset_button(
     mut selected_ui_mode: ResMut<SelectedUiMode>,
     materials_query: Query<&mut Handle<ColorMaterial>>,
 ) {
-
     for (interaction, mut color, mut border_color, children, ui_entity_ref, ent) in
         &mut interaction_query
     {
@@ -711,8 +710,8 @@ pub fn update_list(
     let level_len = level_query.iter().len();
 
     for (ent, child_opt) in &mut interaction_query {
-        let mut child_size = if child_opt.is_some() {
-            child_opt.unwrap().len()
+        let mut child_size = if let Some(child) = child_opt {
+            child.len()
         } else {
             0
         };
@@ -823,7 +822,7 @@ pub fn move_items(
         let (mut transform, mesh_handle, mut aabb) = query.get_mut(ent).unwrap();
         let mesh = assets_mesh.get_mut(mesh_handle.0.id()).unwrap();
         let mut size = mesh.size();
-        
+
         if keyboard_input.just_pressed(KeyCode::ArrowUp) {
             if selected_ui_mode.0 == "XY" {
                 transform.translation.y += 64.;

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::components::Player;
+use crate::components::{Level, Player};
 
 pub fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());

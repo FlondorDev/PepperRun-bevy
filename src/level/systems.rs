@@ -65,3 +65,18 @@ pub fn setup(
     current_level.1 = Some(level);
     app_state.set(ApplicationState::Game);
 }
+
+pub fn despawn_all(
+    mut commands: Commands,
+    query: Query<Entity, With<Level>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut app_state: ResMut<NextState<ApplicationState>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::KeyR) {
+        for entity in query.iter() {
+            commands.entity(entity).despawn();
+        }
+        app_state.set(ApplicationState::AssetsLoaded);
+    }
+
+}

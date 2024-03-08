@@ -5,6 +5,7 @@ mod level;
 mod loading;
 mod physics;
 mod player;
+mod pepper;
 
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -19,6 +20,7 @@ fn main() {
         .add_plugins(loading::LoadingPlugin)
         .add_plugins(level::LevelPlugin)
         .add_plugins(player::PlayerPlugin)
+        .add_plugins(pepper::PepperPlugin)
         .add_plugins(physics::PhysicsPlugin)
         .add_plugins(camera::CameraPlugin)
         .add_plugins(debug::DebugPlugin)

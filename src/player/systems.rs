@@ -47,12 +47,6 @@ pub fn move_player(
         }
 
         collider.velocity.y = collider.velocity.y + (direction.y * PEPPER_JUMP_FORCE);
-
-        if keyboard_input.pressed(KeyCode::KeyR) {
-            let level = level.1.as_ref().unwrap();
-            let org_pos = position_to_world(level.player.as_vec2(), Vec2::ONE);
-            transform.translation = Vec3::new(org_pos.x, org_pos.y, 0.);
-        }
     }
 }
 

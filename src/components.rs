@@ -50,6 +50,12 @@ pub struct Collider {
 }
 
 #[derive(Component)]
+pub struct Pepper;
+
+#[derive(Component)]
+pub struct Oscillante;
+
+#[derive(Component)]
 pub struct Level;
 
 #[derive(Component)]
