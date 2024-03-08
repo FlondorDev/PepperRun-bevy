@@ -1,3 +1,5 @@
+use bevy::math::Vec3A;
+use bevy::render::primitives::Aabb;
 use bevy::{asset::LoadedFolder, prelude::*, render::mesh::VertexAttributeValues};
 use serde::{Deserialize, Serialize};
 
@@ -53,6 +55,15 @@ pub struct Level;
 #[derive(Component)]
 pub struct Wall;
 
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+pub enum Collision {
+    Left,
+    Right,
+    Top,
+    Bottom,
+    Inside,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
 pub enum Labels {
     Input,
@@ -98,9 +109,33 @@ impl Vec2Ser {
 
 pub trait PositionToVec2 {
     fn size(&self) -> Vec2;
-    fn set_size(&mut self, size: Vec2);
     fn set_uv_size(&mut self, size: Vec2);
     fn flip_uv(&mut self, flip_x: bool);
+}
+
+pub trait SetSize {
+    fn set_size(&mut self, size: Vec2);
+}
+
+impl SetSize for Aabb {
+    fn set_size(&mut self, size: Vec2) {
+        self.half_extents = Vec3A::new(size.x * 0.5, size.y * 0.5, 0.);
+    }
+}
+
+impl SetSize for Mesh {
+    fn set_size(&mut self, size: Vec2) {
+        if let VertexAttributeValues::Float32x3(values) =
+            self.attribute_mut(Mesh::ATTRIBUTE_POSITION).unwrap()
+        {
+            values[0] = [-(size.x * 0.5), -(size.y * 0.5), 0.];
+            values[1] = [-(size.x * 0.5), (size.y * 0.5), 0.];
+            values[2] = [(size.x * 0.5), (size.y * 0.5), 0.];
+            values[3] = [(size.x * 0.5), -(size.y * 0.5), 0.];
+        }
+
+        self.set_uv_size(size);
+    }
 }
 
 impl PositionToVec2 for Mesh {
@@ -111,20 +146,6 @@ impl PositionToVec2 for Mesh {
             }
             _ => Vec2::ZERO,
         }
-    }
-
-    fn set_size(&mut self, size: Vec2) {
-        match self.attribute_mut(Mesh::ATTRIBUTE_POSITION).unwrap() {
-            VertexAttributeValues::Float32x3(values) => {
-                values[0] = [-(size.x * 0.5), -(size.y * 0.5), 0.];
-                values[1] = [-(size.x * 0.5), (size.y * 0.5), 0.];
-                values[2] = [(size.x * 0.5), (size.y * 0.5), 0.];
-                values[3] = [(size.x * 0.5), -(size.y * 0.5), 0.];
-            }
-            _ => {}
-        }
-
-        self.set_uv_size(size);
     }
 
     fn set_uv_size(&mut self, size: Vec2) {

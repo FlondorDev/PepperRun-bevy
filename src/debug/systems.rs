@@ -1,5 +1,5 @@
 use crate::components::{
-    Collider, CurrentLevel, DebugState, DebugUI, Level, Name, ObjectSchema, Player, PositionToVec2,
+    Collider, CurrentLevel, DebugState, DebugUI, Level, Name, ObjectSchema, Player, PositionToVec2, SetSize,
     SelectedUiEntity, SelectedUiMode, UiEntityRef, Vec2Ser,
 };
 use crate::level::utils::spawn_object;
@@ -13,6 +13,7 @@ use bevy::{
     },
     input::mouse::{MouseScrollUnit, MouseWheel},
 };
+use bevy::render::primitives::Aabb;
 
 #[derive(Component, Default)]
 pub struct ScrollingList {
@@ -491,11 +492,12 @@ pub fn setup_editor(
 }
 
 pub fn switch_state(
-    keyboard_input: Res<Input<KeyCode>>,
+    mut config_store: ResMut<GizmoConfigStore>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     current_debug_state: Res<State<DebugState>>,
     mut debug_state: ResMut<NextState<DebugState>>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::P) {
+    if keyboard_input.just_pressed(KeyCode::KeyP) {
         match current_debug_state.get() {
             DebugState::Debug => {
                 debug_state.set(DebugState::Editor);
@@ -507,6 +509,12 @@ pub fn switch_state(
                 debug_state.set(DebugState::Debug);
             }
         }
+    }
+
+    if keyboard_input.just_pressed(KeyCode::KeyO) {
+        // AABB gizmos are normally only drawn on entities with a ShowAabbGizmo component
+        // We can change this behaviour in the configuration of AabbGizmoGroup
+        config_store.config_mut::<AabbGizmoConfigGroup>().1.draw_all ^= true;
     }
 }
 
@@ -542,10 +550,9 @@ pub fn button_system(
             &mut BorderColor,
             &Children,
             Option<&UiEntityRef>,
-            Changed<Interaction>,
             Entity,
         ),
-        With<Button>,
+        (Changed<Interaction>, With<Button>),
     >,
     mut text_query: Query<&mut Text>,
     mut commands: Commands,
@@ -557,14 +564,14 @@ pub fn button_system(
     mut selected_ui_mode: ResMut<SelectedUiMode>,
     materials_query: Query<&mut Handle<ColorMaterial>>,
 ) {
-    for (interaction, mut color, mut border_color, children, ui_entity_ref, changed, ent) in
+    for (interaction, mut color, mut border_color, children, ui_entity_ref, ent) in
         &mut interaction_query
     {
         let text = text_query.get_mut(children[0]).unwrap();
         *color = PRESSED_BUTTON.into();
         border_color.0 = Color::RED;
-        match *interaction {
-            Interaction::Pressed if changed => match text.sections[0].value.as_str() {
+        if *interaction == Interaction::Pressed {
+            match text.sections[0].value.as_str() {
                 "-" => {
                     if let Some(selected_ent) = selected_ui_entity.0 {
                         let entity_command = commands.entity(selected_ent);
@@ -611,7 +618,37 @@ pub fn button_system(
                         }
                     }
                 }
-            },
+            }
+        }
+    }
+}
+
+pub fn reset_button(
+    mut interaction_query: Query<
+        (
+            &Interaction,
+            &mut BackgroundColor,
+            &mut BorderColor,
+            &Children,
+            Option<&UiEntityRef>,
+            Entity,
+        ),
+        (With<Button>),
+    >,
+    mut text_query: Query<&mut Text>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut selected_ui_entity: ResMut<SelectedUiEntity>,
+    mut selected_ui_mode: ResMut<SelectedUiMode>,
+    materials_query: Query<&mut Handle<ColorMaterial>>,
+) {
+
+    for (interaction, mut color, mut border_color, children, ui_entity_ref, ent) in
+        &mut interaction_query
+    {
+        let text = text_query.get_mut(children[0]).unwrap();
+        *color = PRESSED_BUTTON.into();
+        border_color.0 = Color::RED;
+        match *interaction {
             Interaction::Hovered => match text.sections[0].value.as_str() {
                 "-" | "+" | "WH" | "XY" => match &selected_ui_mode.0 {
                     mode if mode == text.sections[0].value.as_str() => {}
@@ -756,86 +793,72 @@ pub fn debug_text(
         }
         if coll_res.is_ok() {
             let coll = coll_res.unwrap();
-            match name.0.as_str() {
-                "is_grounded" => {
-                    text.sections[1].value = coll.is_grounded.to_string();
-                }
-                _ => {}
-            }
-            match name.0.as_str() {
-                "velx" => {
-                    text.sections[1].value = coll.velocity.x.to_string();
-                }
-                _ => {}
-            }
-            match name.0.as_str() {
-                "vely" => {
-                    text.sections[1].value = coll.velocity.y.to_string();
-                }
-                _ => {}
+            if name.0.as_str() == "is_grounded" {
+                text.sections[1].value = coll.is_grounded.to_string();
+            } else if name.0.as_str() == "velx" {
+                text.sections[1].value = coll.velocity.x.to_string();
+            } else if name.0.as_str() == "vely" {
+                text.sections[1].value = coll.velocity.y.to_string();
             }
         }
         if player_res.is_ok() {
             let player = player_res.unwrap();
-            match name.0.as_str() {
-                "jumps" => {
-                    text.sections[1].value = player.jumps.to_string();
-                }
-                _ => {}
-            }
-            match name.0.as_str() {
-                "speedmult" => {
-                    text.sections[1].value = player.speed_mult.to_string();
-                }
-                _ => {}
+            if name.0.as_str() == "jumps" {
+                text.sections[1].value = player.jumps.to_string();
+            } else if name.0.as_str() == "speedmult" {
+                text.sections[1].value = player.speed_mult.to_string();
             }
         }
     }
 }
 
 pub fn move_items(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     selected_ui_entity: ResMut<SelectedUiEntity>,
     selected_ui_mode: ResMut<SelectedUiMode>,
     mut assets_mesh: ResMut<Assets<Mesh>>,
-    mut query: Query<(&mut Transform, &Mesh2dHandle)>,
+    mut query: Query<(&mut Transform, &Mesh2dHandle, &mut Aabb)>,
 ) {
     if let Some(ent) = selected_ui_entity.0 {
-        let (mut transform, mesh_handle) = query.get_mut(ent).unwrap();
+        let (mut transform, mesh_handle, mut aabb) = query.get_mut(ent).unwrap();
         let mesh = assets_mesh.get_mut(mesh_handle.0.id()).unwrap();
         let mut size = mesh.size();
-
-        if keyboard_input.just_pressed(KeyCode::Up) {
+        
+        if keyboard_input.just_pressed(KeyCode::ArrowUp) {
             if selected_ui_mode.0 == "XY" {
                 transform.translation.y += 64.;
             } else {
                 size.y += 64.;
                 transform.translation.y += 32.;
                 mesh.set_size(size);
+                aabb.set_size(size);
             }
-        } else if keyboard_input.just_pressed(KeyCode::Down) {
+        } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
             if selected_ui_mode.0 == "XY" {
                 transform.translation.y -= 64.;
             } else if size.y > 64. {
                 size.y -= 64.;
                 transform.translation.y -= 32.;
                 mesh.set_size(size);
+                aabb.set_size(size);
             }
-        } else if keyboard_input.just_pressed(KeyCode::Left) {
+        } else if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
             if selected_ui_mode.0 == "XY" {
                 transform.translation.x -= 64.;
             } else if size.x > 64. {
                 size.x -= 64.;
                 transform.translation.x -= 32.;
                 mesh.set_size(size);
+                aabb.set_size(size);
             }
-        } else if keyboard_input.just_pressed(KeyCode::Right) {
+        } else if keyboard_input.just_pressed(KeyCode::ArrowRight) {
             if selected_ui_mode.0 == "XY" {
                 transform.translation.x += 64.;
             } else {
                 size.x += 64.;
                 transform.translation.x += 32.;
                 mesh.set_size(size);
+                aabb.set_size(size);
             }
         }
     }

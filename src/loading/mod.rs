@@ -41,7 +41,7 @@ fn check_assets_ready(
                     let folder = loaded_folder_assets.get(h.id()).unwrap();
 
                     for file in &folder.handles {
-                        let ima = image_assets.get_mut(file.id()).unwrap();
+                        let ima = image_assets.get_mut(file.id().typed()).unwrap();
                         ima.sampler = ImageSampler::Descriptor(
                             bevy::render::texture::ImageSamplerDescriptor {
                                 address_mode_u: bevy::render::texture::ImageAddressMode::Repeat,
@@ -57,9 +57,7 @@ fn check_assets_ready(
             }
         })
         .filter(|state| *state == false)
-        .collect::<Vec<bool>>()
-        .len()
-        == 0
+        .collect::<Vec<bool>>().is_empty()
     {
         loading.1 = true;
     }

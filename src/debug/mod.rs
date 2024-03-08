@@ -23,7 +23,7 @@ impl Plugin for DebugPlugin {
             )
             .add_systems(
                 Update,
-                (mouse_scroll, button_system, update_list, move_items).run_if(state_exists_and_equals::<
+                (mouse_scroll, reset_button, button_system, update_list, move_items).run_if(state_exists_and_equals::<
                     DebugState,
                 >(
                     DebugState::Editor

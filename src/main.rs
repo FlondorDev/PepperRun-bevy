@@ -7,13 +7,15 @@ mod physics;
 mod player;
 
 use bevy::prelude::*;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use components::{ApplicationState, DebugState};
 
 fn main() {
     App::new()
-        .add_state::<ApplicationState>()
-        .add_state::<DebugState>()
+        .init_state::<ApplicationState>()
+        .init_state::<DebugState>()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(loading::LoadingPlugin)
         .add_plugins(level::LevelPlugin)
         .add_plugins(player::PlayerPlugin)

@@ -3,12 +3,12 @@ use bevy::{
     ecs::system::Res,
     math::{Vec2, Vec3},
     render::{mesh::Mesh, texture::Image},
-    sprite::{collide_aabb::Collision, Mesh2dHandle, Sprite},
+    sprite::{Mesh2dHandle, Sprite},
     time::Time,
     transform::components::Transform,
 };
 
-use crate::components::{Collider, PositionToVec2};
+use crate::components::{Collider, Collision, PositionToVec2};
 
 #[inline]
 pub fn add_velocity(translation: &mut Vec3, velocity: &Vec2, time: &Res<Time>) {
@@ -125,7 +125,6 @@ pub fn collide_x(
 ) -> Option<(Collision, f32)> {
     let a_size = assets_mesh.get(a_mesh.0.id()).unwrap().size() * a_pos.scale.truncate();
     let b_size = assets_mesh.get(b_mesh.0.id()).unwrap().size() * b_pos.scale.truncate();
-
 
     let mut new_a_pos_x = a_pos.translation.clone();
     let mut new_b_pos_x = b_pos.translation.clone();

@@ -1,21 +1,18 @@
-use bevy::{
-    math::vec2,
-    prelude::*,
-    sprite::{collide_aabb::Collision, Mesh2dHandle},
-};
+use bevy::{math::vec2, prelude::*, sprite::Mesh2dHandle};
 
 use crate::{
     components::{Collider, CurrentLevel, Gravity, Player, PositionToVec2, Wall},
     level::utils::position_to_world,
     physics::utils::{collide_x, collide_y},
 };
+use crate::components::Collision;
 
 const PLAYER_SPEED: f32 = 500.;
 const PEPPER_SPEED_MULTIPLIER: f32 = 2.;
 const PEPPER_JUMP_FORCE: f32 = 1000.;
 
 pub fn move_player(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut player_query: Query<
         (&Mesh2dHandle, &mut Collider, &mut Player, &mut Transform),
         (With<Player>, Without<Camera2d>),
@@ -29,19 +26,19 @@ pub fn move_player(
         let mesh = assets_mesh.get_mut(mesh.0.id()).unwrap();
         let mut direction = Vec2 { x: 0., y: 0. };
 
-        if keyboard_input.pressed(KeyCode::A) {
+        if keyboard_input.pressed(KeyCode::KeyA) {
             direction.x -= 1.0;
             mesh.flip_uv(true);
         }
 
-        if keyboard_input.pressed(KeyCode::D) {
+        if keyboard_input.pressed(KeyCode::KeyD) {
             direction.x += 1.0;
             mesh.flip_uv(false);
         }
 
         collider.velocity.x = direction.x * (PLAYER_SPEED * player.speed_mult);
 
-        if (keyboard_input.just_pressed(KeyCode::Space) || keyboard_input.just_pressed(KeyCode::W))
+        if (keyboard_input.just_pressed(KeyCode::Space) || keyboard_input.just_pressed(KeyCode::KeyW))
             && player.jumps > 0
         {
             collider.velocity.y = 0.;
@@ -51,7 +48,7 @@ pub fn move_player(
 
         collider.velocity.y = collider.velocity.y + (direction.y * PEPPER_JUMP_FORCE);
 
-        if keyboard_input.pressed(KeyCode::R) {
+        if keyboard_input.pressed(KeyCode::KeyR) {
             let level = level.1.as_ref().unwrap();
             let org_pos = position_to_world(level.player.as_vec2(), Vec2::ONE);
             transform.translation = Vec3::new(org_pos.x, org_pos.y, 0.);

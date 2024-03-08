@@ -36,10 +36,11 @@ pub fn generate_mesh2d(
     }
     .into();
     mesh.set_uv_size(size * 64.);
+    
 
     let mesh_handle = meshes.add(mesh);
 
-    let material: Handle<ColorMaterial> = materials.add(texture.into());
+    let material: Handle<ColorMaterial> = materials.add(texture);
 
     MaterialMesh2dBundle {
         mesh: mesh_handle.into(),
