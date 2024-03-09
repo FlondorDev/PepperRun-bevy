@@ -683,12 +683,15 @@ pub fn reset_button(
                         match selected_ui_entity.0 {
                             Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {}
                             _ => {
-                                let handle_material: &Handle<ColorMaterial> =
-                                    materials_query.get(ui_entity_ref.unwrap().0).unwrap();
-                                let material = materials.get_mut(handle_material).unwrap();
-                                material.color = Color::WHITE;
-                                *color = NORMAL_BUTTON.into();
-                                border_color.0 = Color::BLACK;
+                                if let Ok(handle_material) =
+                                    materials_query.get(ui_entity_ref.unwrap().0)
+                                {
+                                    if let Some(material) = materials.get_mut(handle_material) {
+                                        material.color = Color::WHITE;
+                                        *color = NORMAL_BUTTON.into();
+                                        border_color.0 = Color::BLACK;
+                                    }
+                                }
                             }
                         }
                     }
@@ -819,45 +822,46 @@ pub fn move_items(
     mut query: Query<(&mut Transform, &Mesh2dHandle, &mut Aabb)>,
 ) {
     if let Some(ent) = selected_ui_entity.0 {
-        let (mut transform, mesh_handle, mut aabb) = query.get_mut(ent).unwrap();
-        let mesh = assets_mesh.get_mut(mesh_handle.0.id()).unwrap();
-        let mut size = mesh.size();
+        if let Ok((mut transform, mesh_handle, mut aabb)) = query.get_mut(ent) {
+            let mesh = assets_mesh.get_mut(mesh_handle.0.id()).unwrap();
+            let mut size = mesh.size();
 
-        if keyboard_input.just_pressed(KeyCode::ArrowUp) {
-            if selected_ui_mode.0 == "XY" {
-                transform.translation.y += 64.;
-            } else {
-                size.y += 64.;
-                transform.translation.y += 32.;
-                mesh.set_size(size);
-                aabb.set_size(size);
-            }
-        } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
-            if selected_ui_mode.0 == "XY" {
-                transform.translation.y -= 64.;
-            } else if size.y > 64. {
-                size.y -= 64.;
-                transform.translation.y -= 32.;
-                mesh.set_size(size);
-                aabb.set_size(size);
-            }
-        } else if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
-            if selected_ui_mode.0 == "XY" {
-                transform.translation.x -= 64.;
-            } else if size.x > 64. {
-                size.x -= 64.;
-                transform.translation.x -= 32.;
-                mesh.set_size(size);
-                aabb.set_size(size);
-            }
-        } else if keyboard_input.just_pressed(KeyCode::ArrowRight) {
-            if selected_ui_mode.0 == "XY" {
-                transform.translation.x += 64.;
-            } else {
-                size.x += 64.;
-                transform.translation.x += 32.;
-                mesh.set_size(size);
-                aabb.set_size(size);
+            if keyboard_input.just_pressed(KeyCode::ArrowUp) {
+                if selected_ui_mode.0 == "XY" {
+                    transform.translation.y += 64.;
+                } else {
+                    size.y += 64.;
+                    transform.translation.y += 32.;
+                    mesh.set_size(size);
+                    aabb.set_size(size);
+                }
+            } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
+                if selected_ui_mode.0 == "XY" {
+                    transform.translation.y -= 64.;
+                } else if size.y > 64. {
+                    size.y -= 64.;
+                    transform.translation.y -= 32.;
+                    mesh.set_size(size);
+                    aabb.set_size(size);
+                }
+            } else if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
+                if selected_ui_mode.0 == "XY" {
+                    transform.translation.x -= 64.;
+                } else if size.x > 64. {
+                    size.x -= 64.;
+                    transform.translation.x -= 32.;
+                    mesh.set_size(size);
+                    aabb.set_size(size);
+                }
+            } else if keyboard_input.just_pressed(KeyCode::ArrowRight) {
+                if selected_ui_mode.0 == "XY" {
+                    transform.translation.x += 64.;
+                } else {
+                    size.x += 64.;
+                    transform.translation.x += 32.;
+                    mesh.set_size(size);
+                    aabb.set_size(size);
+                }
             }
         }
     }

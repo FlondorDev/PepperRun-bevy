@@ -1,11 +1,8 @@
-use bevy::{math::vec2, prelude::*, sprite::Mesh2dHandle};
+use bevy::{prelude::*, sprite::Mesh2dHandle};
 
-use crate::{
-    components::{Collider, CurrentLevel, Gravity, Player, PositionToVec2, Wall},
-    level::utils::position_to_world,
-    physics::utils::{collide_x, collide_y},
-};
 use crate::components::Collision;
+use crate::components::{Collider, CurrentLevel, Player, PositionToVec2, Wall};
+use crate::game::systems::physics::utils::{collide_x, collide_y};
 
 const PLAYER_SPEED: f32 = 500.;
 const PEPPER_SPEED_MULTIPLIER: f32 = 2.;
@@ -38,7 +35,8 @@ pub fn move_player(
 
         collider.velocity.x = direction.x * (PLAYER_SPEED * player.speed_mult);
 
-        if (keyboard_input.just_pressed(KeyCode::Space) || keyboard_input.just_pressed(KeyCode::KeyW))
+        if (keyboard_input.just_pressed(KeyCode::Space)
+            || keyboard_input.just_pressed(KeyCode::KeyW))
             && player.jumps > 0
         {
             collider.velocity.y = 0.;

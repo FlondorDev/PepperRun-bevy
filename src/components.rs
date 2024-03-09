@@ -73,9 +73,7 @@ pub enum Collision {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
 pub enum Labels {
     Input,
-    PhysicsGravity,
-    PhysicsCollision,
-    PhysicsMove,
+    Physics,
     Camera,
 }
 

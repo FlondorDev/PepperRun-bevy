@@ -1,10 +1,9 @@
-use bevy::{asset::{ AssetPath, LoadedFolder}, prelude::*, render::texture::{ImageLoaderSettings, ImageSampler}};
-
 use crate::components::{ApplicationState, AssetsLoading};
+use bevy::{asset::LoadedFolder, prelude::*, render::texture::ImageSampler};
 
-pub struct LoadingPlugin;
+pub struct AssetLoaderPlugin;
 
-impl Plugin for LoadingPlugin {
+impl Plugin for AssetLoaderPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(PreStartup, setup);
         app.add_systems(
@@ -57,7 +56,8 @@ fn check_assets_ready(
             }
         })
         .filter(|state| *state == false)
-        .collect::<Vec<bool>>().is_empty()
+        .collect::<Vec<bool>>()
+        .is_empty()
     {
         loading.1 = true;
     }

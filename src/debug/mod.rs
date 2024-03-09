@@ -8,6 +8,7 @@ pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
+        app.init_state::<DebugState>();
         app.insert_resource(SelectedUiEntity(None, None));
         app.insert_resource(SelectedUiMode("XY".to_string()));
         app.add_systems(OnEnter(DebugState::Debug), setup_debug)
@@ -18,7 +19,7 @@ impl Plugin for DebugPlugin {
             .add_systems(
                 FixedUpdate,
                 debug_text
-                    .after(Labels::PhysicsMove)
+                    .after(Labels::Physics)
                     .run_if(in_state(DebugState::Debug)),
             )
             .add_systems(

@@ -1,8 +1,10 @@
+pub mod utils;
+
 use bevy::prelude::*;
 
 use crate::components::{Collider, Gravity, Player};
 
-use super::utils::*;
+use utils::*;
 
 const GRAVITY_SPEED: f32 = 50.;
 const MAX_GRAVITY_SPEED: f32 = 1400.;

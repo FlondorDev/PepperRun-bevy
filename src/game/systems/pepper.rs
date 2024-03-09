@@ -1,12 +1,9 @@
 use bevy::math::bounding::{Aabb2d, IntersectsVolume};
+use bevy::prelude::*;
 use bevy::render::primitives::Aabb;
-use bevy::{prelude::*, sprite::Mesh2dHandle};
 
-use crate::components::{Collision, Oscillante, Pepper};
-use crate::{
-    components::{Collider, Player, Wall},
-    physics::utils::{collide_x, collide_y},
-};
+use crate::components::Player;
+use crate::components::{Oscillante, Pepper};
 
 const PLAYER_SPEED: f32 = 500.;
 const PEPPER_SPEED_MULTIPLIER: f32 = 2.;
