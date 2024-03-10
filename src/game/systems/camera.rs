@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::components::{Level, Player};
+use crate::components::Player;
 
 pub fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
@@ -13,6 +13,6 @@ pub fn update_camera(
     let camera_res = camera_query.get_single_mut();
     let player_res = player_query.get_single();
     if camera_res.is_ok() && player_res.is_ok() {
-        camera_res.unwrap().translation = player_res.unwrap().translation.clone();
+        camera_res.unwrap().translation = player_res.unwrap().translation;
     }
 }

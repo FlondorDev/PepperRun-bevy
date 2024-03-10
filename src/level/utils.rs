@@ -1,16 +1,16 @@
+use bevy::prelude::Rectangle;
 use bevy::{
     asset::{AssetServer, Assets, Handle},
     ecs::system::{Commands, Res, ResMut},
     math::{vec2, Vec2},
-    render::{
-        mesh::{shape, Mesh, VertexAttributeValues},
-        texture::Image,
-    },
+    render::{mesh::Mesh, texture::Image},
     sprite::{ColorMaterial, MaterialMesh2dBundle},
     transform::components::Transform,
 };
 
-use crate::components::{Collider, Level, Name, ObjectSchema, Oscillante, Pepper, PositionToVec2, Wall};
+use crate::components::{
+    Collider, Level, Name, ObjectSchema, Oscillante, Pepper, PositionToVec2, Wall,
+};
 
 #[inline]
 pub fn position_to_world(position: Vec2, size: Vec2) -> Vec2 {
@@ -30,9 +30,8 @@ pub fn generate_mesh2d(
     let texture_size: &Image = images.get(texture.id()).unwrap();
     let size = schema.size.as_vec2();
     let position = position_to_world(schema.position.as_vec2(), size);
-    let mut mesh: Mesh = shape::Quad {
-        size: size * texture_size.size().as_vec2(),
-        ..Default::default()
+    let mut mesh: Mesh = Rectangle {
+        half_size: (size * 0.5) * texture_size.size().as_vec2(),
     }
     .into();
     mesh.set_uv_size(size * 64.);
@@ -78,7 +77,7 @@ pub fn spawn_object(
                     .to_string(),
             ),
         ));
-    }else {
+    } else {
         commands.spawn((
             mesh,
             Collider {
@@ -98,6 +97,4 @@ pub fn spawn_object(
             ),
         ));
     }
-
-    
 }

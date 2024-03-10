@@ -6,7 +6,7 @@ use crate::level::utils::spawn_object;
 use bevy::prelude::*;
 
 use bevy::render::primitives::Aabb;
-use bevy::sprite::{Mesh2d, Mesh2dHandle};
+use bevy::sprite::Mesh2dHandle;
 use bevy::{
     a11y::{
         accesskit::{NodeBuilder, Role},
@@ -31,9 +31,8 @@ pub fn clear_ui(
     materials_query: Query<&mut Handle<ColorMaterial>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut selected_ui_entity: ResMut<SelectedUiEntity>,
-    mut selected_ui_mode: ResMut<SelectedUiMode>,
 ) {
-    interaction_query.for_each(|ui_entity_ref| {
+    interaction_query.iter().for_each(|ui_entity_ref| {
         let handle_material: &Handle<ColorMaterial> = materials_query.get(ui_entity_ref.0).unwrap();
         let material = materials.get_mut(handle_material).unwrap();
         material.color = Color::WHITE;
@@ -42,7 +41,9 @@ pub fn clear_ui(
     selected_ui_entity.0 = None;
     selected_ui_entity.1 = None;
 
-    query.for_each(|e| commands.entity(e).despawn_recursive());
+    query
+        .iter()
+        .for_each(|e| commands.entity(e).despawn_recursive());
 }
 
 pub fn setup_debug(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -631,17 +632,16 @@ pub fn reset_button(
             &mut BorderColor,
             &Children,
             Option<&UiEntityRef>,
-            Entity,
         ),
-        (With<Button>),
+        With<Button>,
     >,
     mut text_query: Query<&mut Text>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    mut selected_ui_entity: ResMut<SelectedUiEntity>,
-    mut selected_ui_mode: ResMut<SelectedUiMode>,
+    selected_ui_entity: Res<SelectedUiEntity>,
+    selected_ui_mode: Res<SelectedUiMode>,
     materials_query: Query<&mut Handle<ColorMaterial>>,
 ) {
-    for (interaction, mut color, mut border_color, children, ui_entity_ref, ent) in
+    for (interaction, mut color, mut border_color, children, ui_entity_ref) in
         &mut interaction_query
     {
         let text = text_query.get_mut(children[0]).unwrap();
@@ -660,12 +660,12 @@ pub fn reset_button(
                     Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {}
                     _ => {
                         if ui_entity_ref.is_some() {
-                            let handle_material: &Handle<ColorMaterial> =
-                                materials_query.get(ui_entity_ref.unwrap().0).unwrap();
-                            let material = materials.get_mut(handle_material).unwrap();
-                            material.color = Color::RED;
-                            *color = HOVERED_BUTTON.into();
-                            border_color.0 = Color::WHITE;
+                            if let Ok(handle_material) = materials_query.get(ui_entity_ref.unwrap().0) {
+                                let material = materials.get_mut(handle_material).unwrap();
+                                material.color = Color::RED;
+                                *color = HOVERED_BUTTON.into();
+                                border_color.0 = Color::WHITE;
+                            }
                         }
                     }
                 },

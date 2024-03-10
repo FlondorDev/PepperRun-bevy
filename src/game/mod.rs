@@ -25,6 +25,7 @@ impl Plugin for GamePlugin {
                     physics::move_entity,
                     pepper::player_pepper_collision,
                 )
+                    .chain()
                     .in_set(Labels::Physics)
                     .after(Labels::Input),
             )
@@ -32,7 +33,7 @@ impl Plugin for GamePlugin {
                 Update,
                 camera::update_camera
                     .in_set(Labels::Camera)
-                    .after(Labels::Physics)
+                    .after(Labels::Physics),
             );
     }
 }

@@ -4,10 +4,7 @@ use bevy::render::primitives::Aabb;
 
 use crate::components::Player;
 use crate::components::{Oscillante, Pepper};
-
-const PLAYER_SPEED: f32 = 500.;
-const PEPPER_SPEED_MULTIPLIER: f32 = 2.;
-const PEPPER_JUMP_FORCE: f32 = 1000.;
+use crate::game::systems::player::PEPPER_SPEED_MULTIPLIER;
 
 pub fn move_pepper(mut pepper_query: Query<(&mut Oscillante, &mut Transform)>, time: Res<Time>) {
     for (mut _oscillante, mut transform) in &mut pepper_query {
@@ -16,13 +13,13 @@ pub fn move_pepper(mut pepper_query: Query<(&mut Oscillante, &mut Transform)>, t
 }
 
 pub fn player_pepper_collision(
-    mut player_query: Query<(&mut Transform, &Aabb, &mut Player), (With<Player>, Without<Pepper>)>,
+    mut player_query: Query<(&Transform, &Aabb, &mut Player), (With<Player>, Without<Pepper>)>,
     mut pepper_query: Query<(Entity, &Pepper, &Aabb, &mut Transform)>,
     mut commands: Commands,
 ) {
     let player_res = player_query.get_single_mut();
     if player_res.is_ok() {
-        let (mut player_transform, player_aabb, mut player) = player_res.unwrap();
+        let (player_transform, player_aabb, mut player) = player_res.unwrap();
         for (pepper_entity, _pepper, pepper_aabb, pepper_transform) in &mut pepper_query {
             let player_bounds = Aabb2d::new(
                 player_transform.translation.truncate(),
@@ -36,7 +33,7 @@ pub fn player_pepper_collision(
 
             if player_bounds.intersects(&pepper_bounds) {
                 commands.entity(pepper_entity).despawn();
-                player.speed_mult *= 2.;
+                player.speed_mult *= PEPPER_SPEED_MULTIPLIER;
             }
         }
     }

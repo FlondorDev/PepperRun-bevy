@@ -1,13 +1,13 @@
 use std::fs;
 
-use bevy::{prelude::*, render::mesh::VertexAttributeValues, sprite::MaterialMesh2dBundle};
+use bevy::prelude::*;
 
 use crate::components::{
     ApplicationState, Collider, CurrentLevel, Gravity, Level, LevelSchema, Name, ObjectSchema,
-    Player, Vec2Ser, Wall,
+    Player, Vec2Ser,
 };
 
-use super::utils::{generate_mesh2d, position_to_world, spawn_object};
+use super::utils::{generate_mesh2d, spawn_object};
 
 pub fn setup(
     mut commands: Commands,
@@ -78,5 +78,4 @@ pub fn despawn_all(
         }
         app_state.set(ApplicationState::AssetsLoaded);
     }
-
 }

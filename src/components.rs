@@ -155,34 +155,30 @@ impl PositionToVec2 for Mesh {
     fn set_uv_size(&mut self, size: Vec2) {
         let uvs = self.attribute_mut(Mesh::ATTRIBUTE_UV_0).unwrap();
 
-        match uvs {
-            VertexAttributeValues::Float32x2(uv) => {
-                //uv[0][0] = 0;
-                uv[0][1] = size.y / 64.;
+        if let VertexAttributeValues::Float32x2(uv) = uvs {
+            uv[0][0] = size.x / 64.;
+            //uv[0][1] = 0;
 
-                // uv[1][0] = 0;
-                // uv[1][1] = 0;
+            // uv[1][0] = 0;
+            // uv[1][1] = 0;
 
-                uv[2][0] = size.x / 64.;
-                // uv[2][1] = 0;
+            // uv[2][0] = 0;
+            uv[2][1] = size.y / 64.;
 
-                uv[3][0] = size.x / 64.;
-                uv[3][1] = size.y / 64.;
-            }
-            _ => (),
+            uv[3][0] = size.x / 64.;
+            uv[3][1] = size.y / 64.;
         };
     }
 
     fn flip_uv(&mut self, flip_x: bool) {
-        match self.attribute_mut(Mesh::ATTRIBUTE_UV_0).unwrap() {
-            VertexAttributeValues::Float32x2(values) => {
-                for uv in values.iter_mut() {
-                    if flip_x && uv[0].is_sign_positive() || !flip_x && uv[0].is_sign_negative() {
-                        uv[0] *= -1.;
-                    }
+        if let VertexAttributeValues::Float32x2(values) =
+            self.attribute_mut(Mesh::ATTRIBUTE_UV_0).unwrap()
+        {
+            for uv in values.iter_mut() {
+                if flip_x && uv[0].is_sign_positive() || !flip_x && uv[0].is_sign_negative() {
+                    uv[0] *= -1.;
                 }
             }
-            _ => {}
         }
     }
 }

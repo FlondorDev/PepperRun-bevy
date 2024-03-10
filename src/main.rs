@@ -5,8 +5,6 @@ mod level;
 mod asset_loader;
 
 use bevy::prelude::*;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use components::{ApplicationState, DebugState};
 
 fn main() {
     App::new()
