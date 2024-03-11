@@ -132,9 +132,9 @@ impl SetSize for Mesh {
         if let VertexAttributeValues::Float32x3(values) =
             self.attribute_mut(Mesh::ATTRIBUTE_POSITION).unwrap()
         {
-            values[0] = [-(size.x * 0.5), -(size.y * 0.5), 0.];
+            values[0] = [(size.x * 0.5), (size.y * 0.5), 0.];
             values[1] = [-(size.x * 0.5), (size.y * 0.5), 0.];
-            values[2] = [(size.x * 0.5), (size.y * 0.5), 0.];
+            values[2] = [-(size.x * 0.5), -(size.y * 0.5), 0.];
             values[3] = [(size.x * 0.5), -(size.y * 0.5), 0.];
         }
 

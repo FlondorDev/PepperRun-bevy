@@ -8,9 +8,7 @@ use bevy::{
     transform::components::Transform,
 };
 
-use crate::components::{
-    Collider, Level, Name, ObjectSchema, Oscillante, Pepper, PositionToVec2, Wall,
-};
+use crate::components::{Collider, Level, Name, ObjectSchema, Oscillante, Pepper, PositionToVec2, SetSize, Wall};
 
 #[inline]
 pub fn position_to_world(position: Vec2, size: Vec2) -> Vec2 {
@@ -31,7 +29,7 @@ pub fn generate_mesh2d(
     let size = schema.size.as_vec2();
     let position = position_to_world(schema.position.as_vec2(), size);
     let mut mesh: Mesh = Rectangle {
-        half_size: (size * 0.5) * texture_size.size().as_vec2(),
+        half_size: (size * texture_size.size().as_vec2()) * 0.5,
     }
     .into();
     mesh.set_uv_size(size * 64.);
