@@ -1,7 +1,3 @@
-use crate::components::{
-    Collider, CurrentLevel, DebugState, DebugUI, Level, Name, ObjectSchema, Player, PositionToVec2,
-    SelectedUiEntity, SelectedUiMode, SetSize, UiEntityRef, Vec2Ser,
-};
 use crate::level::utils::spawn_object;
 use bevy::prelude::*;
 
@@ -14,6 +10,10 @@ use bevy::{
     },
     input::mouse::{MouseScrollUnit, MouseWheel},
 };
+use crate::structs::components::{Collider, DebugUI, Level, Name, Player, UiEntityRef};
+use crate::structs::resources::{CurrentLevel, SelectedUiEntity, SelectedUiMode};
+use crate::structs::states::DebugState;
+use crate::structs::{ObjectSchema, PositionToVec2, SetSize, Vec2Ser};
 
 #[derive(Component, Default)]
 pub struct ScrollingList {

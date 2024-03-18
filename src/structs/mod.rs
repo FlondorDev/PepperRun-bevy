@@ -1,65 +1,13 @@
-use bevy::math::Vec3A;
+use bevy::math::{Vec2, Vec3A};
+use bevy::prelude::Mesh;
+use bevy::render::mesh::VertexAttributeValues;
 use bevy::render::primitives::Aabb;
-use bevy::{asset::LoadedFolder, prelude::*, render::mesh::VertexAttributeValues};
 use serde::{Deserialize, Serialize};
 
-#[derive(States, Default, Debug, Hash, Eq, PartialEq, Clone)]
-pub enum ApplicationState {
-    #[default]
-    LoadingAssets,
-    AssetsLoaded,
-    Game,
-}
-
-#[derive(States, Default, Debug, Hash, Eq, PartialEq, Clone)]
-pub enum DebugState {
-    #[default]
-    None,
-    Debug,
-    Editor,
-}
-
-#[derive(Component)]
-pub struct DebugUI(pub DebugState);
-
-#[derive(Resource)]
-pub struct SelectedUiEntity(pub Option<Entity>, pub Option<Entity>);
-
-#[derive(Resource)]
-pub struct SelectedUiMode(pub String);
-
-#[derive(Component)]
-pub struct UiEntityRef(pub Entity);
-
-#[derive(Component)]
-pub struct Name(pub String);
-
-#[derive(Component)]
-pub struct Gravity;
-
-#[derive(Component)]
-pub struct Player {
-    pub speed_mult: f32,
-    pub jumps: i8,
-}
-
-#[derive(Component)]
-pub struct Collider {
-    pub is_grounded: bool,
-    pub velocity: Vec2,
-}
-
-#[derive(Component)]
-pub struct Pepper;
-
-#[derive(Component)]
-pub struct Oscillante;
-
-#[derive(Component)]
-pub struct Level;
-
-#[derive(Component)]
-pub struct Wall;
+pub mod bundles;
+pub mod components;
+pub mod resources;
+pub mod states;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Collision {
@@ -69,19 +17,6 @@ pub enum Collision {
     Bottom,
     Inside,
 }
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
-pub enum Labels {
-    Input,
-    Physics,
-    Camera,
-}
-
-#[derive(Resource)]
-pub struct AssetsLoading(pub Vec<Handle<LoadedFolder>>, pub bool);
-
-#[derive(Resource)]
-pub struct CurrentLevel(pub Option<String>, pub Option<LevelSchema>);
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LevelSchema {

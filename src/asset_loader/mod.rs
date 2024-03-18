@@ -1,5 +1,6 @@
-use crate::components::{ApplicationState, AssetsLoading};
 use bevy::{asset::LoadedFolder, prelude::*, render::texture::ImageSampler};
+use crate::structs::resources::AssetsLoading;
+use crate::structs::states::ApplicationState;
 
 pub struct AssetLoaderPlugin;
 

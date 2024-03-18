@@ -1,8 +1,9 @@
 mod systems;
 use bevy::prelude::*;
 use systems::*;
+use crate::structs::resources::{SelectedUiEntity, SelectedUiMode};
+use crate::structs::states::{DebugState, Labels};
 
-use crate::components::{DebugState, Labels, SelectedUiEntity, SelectedUiMode};
 
 pub struct DebugPlugin;
 

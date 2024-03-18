@@ -1,11 +1,11 @@
 use std::fs;
 
 use bevy::prelude::*;
+use crate::structs::{LevelSchema, ObjectSchema, Vec2Ser};
+use crate::structs::components::{Collider, Gravity, Level, Name, Player};
+use crate::structs::resources::CurrentLevel;
+use crate::structs::states::ApplicationState;
 
-use crate::components::{
-    ApplicationState, Collider, CurrentLevel, Gravity, Level, LevelSchema, Name, ObjectSchema,
-    Player, Vec2Ser,
-};
 
 use super::utils::{generate_mesh2d, spawn_object};
 

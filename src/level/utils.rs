@@ -1,3 +1,4 @@
+use crate::structs::bundles::BaseBundleColl;
 use bevy::prelude::Rectangle;
 use bevy::{
     asset::{AssetServer, Assets, Handle},
@@ -7,8 +8,8 @@ use bevy::{
     sprite::{ColorMaterial, MaterialMesh2dBundle},
     transform::components::Transform,
 };
-
-use crate::components::{Collider, Level, Name, ObjectSchema, Oscillante, Pepper, PositionToVec2, SetSize, Wall};
+use crate::structs::{ObjectSchema, PositionToVec2};
+use crate::structs::components::{Oscillante, Pepper, Wall};
 
 #[inline]
 pub fn position_to_world(position: Vec2, size: Vec2) -> Vec2 {
@@ -41,7 +42,7 @@ pub fn generate_mesh2d(
     MaterialMesh2dBundle {
         mesh: mesh_handle.into(),
         transform: Transform::from_xyz(position.x, position.y, 0.),
-        material: material,
+        material,
         ..Default::default()
     }
 }
@@ -55,44 +56,17 @@ pub fn spawn_object(
     schema: &ObjectSchema,
 ) {
     let mesh = generate_mesh2d(asset_server, meshes, images, materials, schema);
+    let name = schema
+        .texture
+        .clone()
+        .split_once(".")
+        .unwrap()
+        .0
+        .to_string();
+
     if schema.texture.contains("Pepper") {
-        commands.spawn((
-            mesh,
-            Collider {
-                is_grounded: false,
-                velocity: Vec2::ZERO,
-            },
-            Oscillante,
-            Pepper,
-            Level,
-            Name(
-                schema
-                    .texture
-                    .clone()
-                    .split_once(".")
-                    .unwrap()
-                    .0
-                    .to_string(),
-            ),
-        ));
+        commands.spawn((BaseBundleColl::new(name, mesh), Oscillante, Pepper));
     } else {
-        commands.spawn((
-            mesh,
-            Collider {
-                is_grounded: false,
-                velocity: Vec2::ZERO,
-            },
-            Wall,
-            Level,
-            Name(
-                schema
-                    .texture
-                    .clone()
-                    .split_once(".")
-                    .unwrap()
-                    .0
-                    .to_string(),
-            ),
-        ));
+        commands.spawn((BaseBundleColl::new(name, mesh), Wall));
     }
 }

@@ -1,9 +1,9 @@
 mod systems;
 pub mod utils;
 
-use crate::components::{ApplicationState, CurrentLevel};
-
 use self::systems::*;
+use crate::structs::resources::CurrentLevel;
+use crate::structs::states::ApplicationState;
 use bevy::prelude::*;
 
 pub struct LevelPlugin;

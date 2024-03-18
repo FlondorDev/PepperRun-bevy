@@ -5,8 +5,8 @@ use bevy::{
     time::Time,
     transform::components::Transform,
 };
-
-use crate::components::{Collider, Collision};
+use crate::structs::Collision;
+use crate::structs::components::Collider;
 
 #[inline]
 pub fn add_velocity(translation: &mut Vec3, velocity: &Vec2, time: &Res<Time>) {
@@ -45,10 +45,8 @@ fn x(
         // check to see if we hit on the left or right side
         let x_collision = if a_min.x < b_min.x && a_max.x > b_min.x && a_max.x < b_max.x {
             (Collision::Left, b_min.x - org_a_max.x)
-        } else if a_min.x > b_min.x && a_min.x < b_max.x && a_max.x > b_max.x {
-            (Collision::Right, org_a_min.x - b_max.x)
         } else {
-            (Collision::Inside, -f32::INFINITY)
+            (Collision::Right, org_a_min.x - b_max.x)
         };
 
         Some(x_collision)
@@ -78,10 +76,8 @@ fn y(
         // check to see if we hit on the top or bottom side
         let y_collision = if a_min.y < b_min.y && a_max.y > b_min.y && a_max.y < b_max.y {
             (Collision::Bottom, b_min.y - org_a_max.y)
-        } else if a_min.y > b_min.y && a_min.y < b_max.y && a_max.y > b_max.y {
-            (Collision::Top, org_a_min.y - b_max.y)
         } else {
-            (Collision::Inside, -f32::INFINITY)
+            (Collision::Top, org_a_min.y - b_max.y)
         };
 
         Some(y_collision)
@@ -104,8 +100,8 @@ pub fn collide_y(
 
     let mut new_a_pos_y = a_pos.translation.clone();
     let mut new_b_pos_y = b_pos.translation.clone();
-    add_velocity_y(&mut new_a_pos_y, &a_col.velocity, &time);
-    add_velocity_y(&mut new_b_pos_y, &b_col.velocity, &time);
+    add_velocity_y(&mut new_a_pos_y, &a_col.velocity, time);
+    add_velocity_y(&mut new_b_pos_y, &b_col.velocity, time);
 
     y(a_pos.translation, new_a_pos_y, a_size, new_b_pos_y, b_size)
 }

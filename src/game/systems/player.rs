@@ -1,9 +1,9 @@
 use bevy::render::primitives::Aabb;
 use bevy::{prelude::*, sprite::Mesh2dHandle};
 
-use crate::components::Collision;
-use crate::components::{Collider, Player, PositionToVec2, Wall};
 use crate::game::systems::physics::utils::{collide_x, collide_y};
+use crate::structs::Collision;
+use crate::structs::components::{Collider, Player, Wall};
 
 const PLAYER_SPEED: f32 = 500.;
 pub const PEPPER_SPEED_MULTIPLIER: f32 = 2.;
@@ -12,23 +12,23 @@ const PEPPER_JUMP_FORCE: f32 = 1000.;
 pub fn move_player(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut player_query: Query<
-        (&Mesh2dHandle, &mut Collider, &mut Player),
+        (&mut Transform, &Mesh2dHandle, &mut Collider, &mut Player),
         (With<Player>, Without<Camera2d>),
     >,
     mut assets_mesh: ResMut<Assets<Mesh>>,
 ) {
-    if let Ok((mesh, mut collider, mut player)) = player_query.get_single_mut() {
+    if let Ok((mut transform, mesh, mut collider, mut player)) = player_query.get_single_mut() {
         let mesh = assets_mesh.get_mut(mesh.0.id()).unwrap();
         let mut direction = Vec2 { x: 0., y: 0. };
 
         if keyboard_input.pressed(KeyCode::KeyA) {
             direction.x -= 1.0;
-            mesh.flip_uv(true);
+            transform.rotation = Quat::from_rotation_y(std::f32::consts::PI); //mesh.flip_uv(true);
         }
 
         if keyboard_input.pressed(KeyCode::KeyD) {
             direction.x += 1.0;
-            mesh.flip_uv(false);
+            transform.rotation = Quat::from_rotation_y(0.); //mesh.flip_uv(false);
         }
 
         collider.velocity.x = direction.x * (PLAYER_SPEED * player.speed_mult);
