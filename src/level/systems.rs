@@ -80,6 +80,7 @@ pub fn setup(
         );
     });
 
+
     app_state.set(ApplicationState::Game);
     player_state.set(PlayerState::Normal);
     current_level.0 = Some("level".to_string());
@@ -91,6 +92,7 @@ pub fn despawn_all(
     query: Query<Entity, With<Level>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut app_state: ResMut<NextState<ApplicationState>>,
+    mut current_app_state: ResMut<State<ApplicationState>>,
     mut player_state: ResMut<NextState<PlayerState>>,
     mut ui_bar: ResMut<UiBarScore>,
     mut score: ResMut<Score>,

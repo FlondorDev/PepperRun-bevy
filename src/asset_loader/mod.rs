@@ -62,7 +62,6 @@ fn check_assets_ready(
                         //     info!("{json:?}");
                         // }
                     }
-                    app_state.set(ApplicationState::AssetsLoaded);
                     true
                 }
             }
@@ -72,5 +71,6 @@ fn check_assets_ready(
         .is_empty()
     {
         loading.1 = true;
+        app_state.set(ApplicationState::AssetsLoaded);
     }
 }
