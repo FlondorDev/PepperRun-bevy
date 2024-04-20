@@ -4,7 +4,7 @@ use crate::structs::components::Player;
 
 pub fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
-        transform: Transform::from_xyz(0., 300. ,0.),
+        transform: Transform::from_xyz(0., 300., 0.),
         ..default()
     });
 }
@@ -18,7 +18,8 @@ pub fn update_camera(
     let player_res = player_query.get_single();
     if let (Ok(mut camera), Ok(player)) = (camera_res, player_res) {
         camera.translation.x = camera
-            .translation.x
-            .lerp(player.translation.x, time.delta_seconds() * 4.);
+            .translation
+            .x
+            .lerp(player.translation.x, 0.1);
     }
 }

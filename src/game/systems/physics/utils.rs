@@ -1,3 +1,5 @@
+use crate::structs::components::Collider;
+use crate::structs::Collision;
 use bevy::render::primitives::Aabb;
 use bevy::{
     ecs::system::Res,
@@ -5,8 +7,6 @@ use bevy::{
     time::Time,
     transform::components::Transform,
 };
-use crate::structs::Collision;
-use crate::structs::components::Collider;
 
 #[inline]
 pub fn add_velocity(translation: &mut Vec3, velocity: &Vec2, time: &Res<Time>) {

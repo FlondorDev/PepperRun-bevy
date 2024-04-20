@@ -1,6 +1,10 @@
 use crate::level::utils::spawn_object;
 use bevy::prelude::*;
 
+use crate::structs::components::{Collider, DebugUI, Level, Name, Player, UiEntityRef};
+use crate::structs::resources::{CurrentLevel, SelectedUiEntity, SelectedUiMode};
+use crate::structs::states::DebugState;
+use crate::structs::{ObjectSchema, PositionToVec2, SetSize, Vec2Ser};
 use bevy::render::primitives::Aabb;
 use bevy::sprite::Mesh2dHandle;
 use bevy::{
@@ -10,10 +14,6 @@ use bevy::{
     },
     input::mouse::{MouseScrollUnit, MouseWheel},
 };
-use crate::structs::components::{Collider, DebugUI, Level, Name, Player, UiEntityRef};
-use crate::structs::resources::{CurrentLevel, SelectedUiEntity, SelectedUiMode};
-use crate::structs::states::DebugState;
-use crate::structs::{ObjectSchema, PositionToVec2, SetSize, Vec2Ser};
 
 #[derive(Component, Default)]
 pub struct ScrollingList {
@@ -660,7 +660,9 @@ pub fn reset_button(
                     Some(sel_ent) if sel_ent == ui_entity_ref.unwrap().0 => {}
                     _ => {
                         if ui_entity_ref.is_some() {
-                            if let Ok(handle_material) = materials_query.get(ui_entity_ref.unwrap().0) {
+                            if let Ok(handle_material) =
+                                materials_query.get(ui_entity_ref.unwrap().0)
+                            {
                                 let material = materials.get_mut(handle_material).unwrap();
                                 material.color = Color::RED;
                                 *color = HOVERED_BUTTON.into();

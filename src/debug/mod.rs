@@ -1,9 +1,8 @@
 mod systems;
-use bevy::prelude::*;
-use systems::*;
 use crate::structs::resources::{SelectedUiEntity, SelectedUiMode};
 use crate::structs::states::{DebugState, Labels};
-
+use bevy::prelude::*;
+use systems::*;
 
 pub struct DebugPlugin;
 
@@ -19,7 +18,9 @@ impl Plugin for DebugPlugin {
             .add_systems(OnEnter(DebugState::Debug), setup_debug)
             .add_systems(
                 Update,
-                debug_text.run_if(in_state(DebugState::Debug)).after(Labels::Physics),
+                debug_text
+                    .run_if(in_state(DebugState::Debug))
+                    .after(Labels::Physics),
             )
             .add_systems(OnExit(DebugState::Debug), clear_ui)
             // EDITOR MENU

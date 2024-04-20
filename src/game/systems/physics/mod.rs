@@ -2,9 +2,8 @@ pub mod utils;
 
 use bevy::prelude::*;
 
-
-use utils::*;
 use crate::structs::components::{Collider, Gravity, Player};
+use utils::*;
 
 const GRAVITY_SPEED: f32 = 50.;
 const MAX_GRAVITY_SPEED: f32 = 1400.;
@@ -24,7 +23,7 @@ pub fn move_entity(mut query: Query<(&mut Transform, &mut Collider)>, time: Res<
     for (mut transform, mut collider) in &mut query {
         if collider.is_grounded {
             add_velocity_x(&mut transform.translation, &mut collider.velocity, &time);
-        }else{
+        } else {
             add_velocity(&mut transform.translation, &mut collider.velocity, &time);
         }
     }

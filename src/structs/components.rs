@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use crate::structs::states::DebugState;
+use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct DebugUI(pub DebugState);
@@ -34,13 +34,26 @@ pub struct AnimationIndices {
 #[derive(Component, Deref, DerefMut)]
 pub struct AnimationTimer(pub Timer);
 
-
 #[derive(Component)]
 pub struct CameraHighLow(pub Vec2, pub Vec2);
 
+#[derive(Component)]
+pub struct UiBar;
+
+#[derive(Component)]
+pub struct ScoreText;
 
 #[derive(Component)]
 pub struct Pepper;
+#[derive(Component)]
+pub struct Milk;
+#[derive(Component)]
+pub struct Ice;
+#[derive(Component)]
+pub struct Bg;
+
+#[derive(Component)]
+pub struct Spike;
 
 #[derive(Component)]
 pub struct Oscillante;

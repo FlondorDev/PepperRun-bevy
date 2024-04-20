@@ -1,4 +1,6 @@
 use crate::structs::bundles::BaseBundleColl;
+use crate::structs::components::{Ice, Milk, Oscillante, Pepper, Spike, Wall};
+use crate::structs::{ObjectSchema, PositionToVec2};
 use bevy::prelude::Rectangle;
 use bevy::{
     asset::{AssetServer, Assets, Handle},
@@ -8,8 +10,6 @@ use bevy::{
     sprite::{ColorMaterial, MaterialMesh2dBundle},
     transform::components::Transform,
 };
-use crate::structs::{ObjectSchema, PositionToVec2};
-use crate::structs::components::{Oscillante, Pepper, Wall};
 
 #[inline]
 pub fn position_to_world(position: Vec2, size: Vec2) -> Vec2 {
@@ -66,6 +66,12 @@ pub fn spawn_object(
 
     if schema.texture.contains("Pepper") {
         commands.spawn((BaseBundleColl::new(name, mesh), Oscillante, Pepper));
+    } else if schema.texture.contains("Spunzone") {
+        commands.spawn((BaseBundleColl::new(name, mesh), Spike));
+    } else if schema.texture.contains("Latte") {
+        commands.spawn((BaseBundleColl::new(name, mesh), Oscillante, Milk));
+    } else if schema.texture.contains("Giacchiolo") {
+        commands.spawn((BaseBundleColl::new(name, mesh), Oscillante, Ice));
     } else {
         commands.spawn((BaseBundleColl::new(name, mesh), Wall));
     }

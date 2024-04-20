@@ -1,5 +1,5 @@
-use crate::structs::components::{AnimationIndices, AnimationTimer};
-use bevy::prelude::{Query, Res, TextureAtlas, Time};
+use crate::structs::components::{AnimationIndices, AnimationTimer, Oscillante};
+use bevy::prelude::{Query, Res, TextureAtlas, Time, Transform};
 
 pub fn animate_sprite(
     time: Res<Time>,
@@ -14,5 +14,14 @@ pub fn animate_sprite(
                 atlas.index + 1
             };
         }
+    }
+}
+
+pub fn move_oscillante(
+    mut pepper_query: Query<(&mut Oscillante, &mut Transform)>,
+    time: Res<Time>,
+) {
+    for (mut _oscillante, mut transform) in &mut pepper_query {
+        transform.translation.y += (time.elapsed_seconds() * 2.2).sin() * 0.2;
     }
 }

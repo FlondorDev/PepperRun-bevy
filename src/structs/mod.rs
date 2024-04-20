@@ -21,6 +21,7 @@ pub enum Collision {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LevelSchema {
     pub schema: Vec<ObjectSchema>,
+    pub bg: String,
     pub player: Vec2Ser,
 }
 

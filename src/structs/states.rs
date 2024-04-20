@@ -20,4 +20,14 @@ pub enum DebugState {
 pub enum Labels {
     Input,
     Physics,
+    Other
+}
+
+#[derive(States, Default, Debug, Hash, Eq, PartialEq, Clone)]
+pub enum PlayerState {
+    #[default]
+    None,
+    Normal,
+    Pepper,
+    Dead,
 }

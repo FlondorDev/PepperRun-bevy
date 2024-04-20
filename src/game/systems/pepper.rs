@@ -3,13 +3,11 @@ use bevy::prelude::*;
 use bevy::render::primitives::Aabb;
 
 use crate::game::systems::player::PEPPER_SPEED_MULTIPLIER;
-use crate::structs::components::{AnimationIndices, AnimationTimer, Level, Oscillante, Pepper, Player};
-
-pub fn move_pepper(mut pepper_query: Query<(&mut Oscillante, &mut Transform)>, time: Res<Time>) {
-    for (mut _oscillante, mut transform) in &mut pepper_query {
-        transform.translation.y += (time.elapsed_seconds() * 2.2).sin() * 0.2;
-    }
-}
+use crate::structs::components::{
+    AnimationIndices, AnimationTimer, Level, Oscillante, Pepper, Player,
+};
+use crate::structs::resources::{Score, UiBarScore};
+use crate::structs::states::{ApplicationState, PlayerState};
 
 pub fn player_pepper_collision(
     mut player_query: Query<
@@ -20,6 +18,8 @@ pub fn player_pepper_collision(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    mut player_state: ResMut<NextState<PlayerState>>,
+    mut score: ResMut<Score>,
 ) {
     let player_res = player_query.get_single_mut();
     if player_res.is_ok() {
@@ -44,7 +44,7 @@ pub fn player_pepper_collision(
 
                 let animation_indices = AnimationIndices { first: 0, last: 4 };
 
-             
+                score.0 += 20.;
 
                 commands
                     .get_entity(player_entity)
@@ -72,6 +72,7 @@ pub fn player_pepper_collision(
 
                 commands.entity(pepper_entity).despawn();
                 player.speed_mult *= PEPPER_SPEED_MULTIPLIER;
+                player_state.set(PlayerState::Pepper);
             }
         }
     }

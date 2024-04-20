@@ -1,11 +1,11 @@
 use std::fs;
 
-use bevy::prelude::*;
-use crate::structs::{LevelSchema, ObjectSchema, Vec2Ser};
+use crate::asset_loader::json_loader::JsonAsset;
 use crate::structs::components::{Collider, Gravity, Level, Name, Player};
-use crate::structs::resources::CurrentLevel;
-use crate::structs::states::ApplicationState;
-
+use crate::structs::resources::{CurrentLevel, Score, UiBarScore};
+use crate::structs::states::{ApplicationState, PlayerState};
+use crate::structs::{LevelSchema, ObjectSchema, Vec2Ser};
+use bevy::prelude::*;
 
 use super::utils::{generate_mesh2d, spawn_object};
 
@@ -14,16 +14,19 @@ pub fn setup(
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     images: Res<Assets<Image>>,
+    jsons: Res<Assets<JsonAsset>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut current_level: ResMut<CurrentLevel>,
     mut app_state: ResMut<NextState<ApplicationState>>,
+    mut player_state: ResMut<NextState<PlayerState>>,
 ) {
-    let levels = fs::read("assets/levels/level.json").unwrap();
+    let level_json = jsons
+        .get(asset_server.get_handle("levels/level.json").unwrap().id())
+        .unwrap();
 
-    let level =
-        serde_json::from_str::<LevelSchema>(String::from_utf8(levels).unwrap().as_str()).unwrap();
+    let level = serde_json::from_value::<LevelSchema>((*level_json).clone()).unwrap();
 
-    let mesh = generate_mesh2d(
+    let mut mesh = generate_mesh2d(
         &asset_server,
         &mut meshes,
         &images,
@@ -34,6 +37,22 @@ pub fn setup(
             texture: "Player.png".to_string(),
         },
     );
+
+    // hack per player come primo layer
+    mesh.transform.translation.z = 3.;
+
+    // commands.spawn((
+    //     (SpriteBundle {
+    //         texture: asset_server.load(format!("texture/{}", level.bg)),
+    //         transform: Transform {
+    //             rotation: Quat::from_rotation_z(0.),
+    //             scale: Vec3::new(3440. / 64., 1440. / 64., 0.),
+    //             translation: Vec3::new(3440. / 2., 0., -1.),
+    //         },
+    //         ..default()
+    //     }),
+    //     Level,
+    // ));
 
     commands.spawn((
         mesh,
@@ -61,9 +80,10 @@ pub fn setup(
         );
     });
 
+    app_state.set(ApplicationState::Game);
+    player_state.set(PlayerState::Normal);
     current_level.0 = Some("level".to_string());
     current_level.1 = Some(level);
-    app_state.set(ApplicationState::Game);
 }
 
 pub fn despawn_all(
@@ -71,11 +91,17 @@ pub fn despawn_all(
     query: Query<Entity, With<Level>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut app_state: ResMut<NextState<ApplicationState>>,
+    mut player_state: ResMut<NextState<PlayerState>>,
+    mut ui_bar: ResMut<UiBarScore>,
+    mut score: ResMut<Score>,
 ) {
     if keyboard_input.just_pressed(KeyCode::KeyR) {
         for entity in query.iter() {
-            commands.entity(entity).despawn();
+            commands.entity(entity).despawn()
         }
         app_state.set(ApplicationState::AssetsLoaded);
+        player_state.set(PlayerState::None);
+        *ui_bar = UiBarScore::default();
+        *score = Score::default();
     }
 }

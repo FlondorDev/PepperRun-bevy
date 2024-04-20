@@ -1,9 +1,14 @@
+use bevy::math::bounding::{Aabb2d, IntersectsVolume};
 use bevy::render::primitives::Aabb;
 use bevy::{prelude::*, sprite::Mesh2dHandle};
+use egui_dock::egui::Key::M;
 
 use crate::game::systems::physics::utils::{collide_x, collide_y};
+use crate::structs::components::{
+    AnimationIndices, AnimationTimer, Collider, Level, Pepper, Player, Spike, Wall,
+};
+use crate::structs::states::PlayerState;
 use crate::structs::Collision;
-use crate::structs::components::{Collider, Player, Wall};
 
 const PLAYER_SPEED: f32 = 500.;
 pub const PEPPER_SPEED_MULTIPLIER: f32 = 2.;
@@ -111,5 +116,29 @@ pub fn player_wall_collision(
             }
         }
         player_collider.is_grounded = is_grounded;
+    }
+}
+
+pub fn player_death(
+    mut player_query: Query<
+        (&mut Transform, &mut Collider, Entity),
+        (With<Player>, Without<Spike>),
+    >,
+    mut commands: Commands,
+) {
+    if let Ok((mut player_transform, mut collider, player_entity)) = player_query.get_single_mut() {
+        commands.entity(player_entity).remove::<Player>();
+        commands.entity(player_entity).despawn_descendants();
+        collider.velocity.y = 1000.;
+        collider.is_grounded = false;
+        let rot = player_transform.rotation.to_euler(EulerRot::XYZ);
+        player_transform.rotation = Quat::from_euler(
+            EulerRot::XYZ,
+            rot.0,
+            rot.1,
+            rot.2 + std::f32::consts::PI * 0.5,
+        );
+
+        // TODO: play death sound;
     }
 }
